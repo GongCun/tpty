@@ -1,0 +1,840 @@
+head	1.14;
+access;
+symbols;
+locks
+	gongcunjust:1.14; strict;
+comment	@ * @;
+
+
+1.14
+date	2015.05.04.11.27.21;	author gongcunjust;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	2015.04.26.01.31.14;	author gongcunjust;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	2015.04.25.13.08.37;	author gongcunjust;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	2015.04.25.12.26.24;	author gongcunjust;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	2015.04.25.12.09.17;	author gongcunjust;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	2015.04.24.12.33.39;	author gongcunjust;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	2015.04.24.00.04.25;	author gongcunjust;	state Exp;
+branches
+	1.8.1.1
+	1.8.2.1;
+next	1.7;
+
+1.7
+date	2015.04.23.23.45.23;	author gongcunjust;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	2015.04.23.22.21.53;	author gongcunjust;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2015.04.23.13.01.00;	author gongcunjust;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2015.04.23.12.22.21;	author gongcunjust;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2015.04.22.03.37.49;	author gongcunjust;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2015.04.15.12.32.30;	author gongcunjust;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2015.04.15.12.05.54;	author gongcunjust;	state Exp;
+branches;
+next	;
+
+1.8.1.1
+date	2015.04.25.03.07.33;	author gongcunjust;	state Exp;
+branches;
+next	;
+
+1.8.2.1
+date	2015.04.25.12.00.35;	author gongcunjust;	state Exp;
+branches;
+next	1.8.2.2;
+
+1.8.2.2
+date	2015.04.25.12.23.29;	author gongcunjust;	state Exp;
+branches;
+next	;
+
+
+desc
+@fix bug <can't execute: ...: No such file or directory, when specified the
+match file, but exit code is still 0.
+@
+
+
+1.14
+log
+@if (manflg == 0) waitpid(pid, &status, 0);
+@
+text
+@#include "tpty.h"
+#include <termios.h>
+#include <signal.h>
+
+#define OPTSTR "Ia:r:t:d:f:einvxo:Xp:k:u"
+#define HELP "usage: tpty [ -x -f config ] [ -t timeout -d driver -einuvXI -o output -r record -a auditfile -p RSAPrivateKey -k EncryptedKey ] program [ args ... ]"
+
+
+static void
+set_noecho(int);		/* at the end of this file */
+
+extern void
+do_driver(int (*f_driver) (void), int);	/* at the file do_driver.c */
+
+extern void
+loop(int, int);			/* at the file loop.c */
+
+static void
+sig_winch(int);
+
+
+int             fdm;
+char           *pathconfig;
+char           *driver;
+int             outputfd;
+FILE           *timingfd;
+int             timeout = 10;	/* default 10 seconds */
+int             tflg;
+int             oflg;
+int             zeroflg;
+int             manflg = 0;
+FILE           *keyfd;
+char           *rsafd;
+int             encflg = 0;
+int             auditflg;
+FILE           *auditfd;
+int             tty = -1;
+int             rmflg = 0;
+int             status;
+int             ret;
+
+int
+main(int argc, char **argv)
+{
+	int             c, ignoreeof, interactive, noecho, verbose, defdriver;
+	pid_t           pid, childpid;
+	char            slave_name[20];
+	struct termios  orig_termios;
+	struct winsize  size;
+	int             fd;
+	char           *key_name;
+
+	umask(0);
+	interactive = isatty(STDIN_FILENO);
+	ignoreeof = 0;
+	noecho = 0;
+	verbose = 0;
+	defdriver = 0;
+
+	opterr = 0;		/* don't want getopt() writing to stderr */
+	while ((c = getopt(argc, argv, OPTSTR)) != EOF) {
+		switch (c) {
+		case 'a':	/* open audit record */
+			auditflg = 1;
+			auditfd = fopen(optarg, "w");
+			if (auditfd == NULL)
+				err_sys("cannot open file %s", optarg);
+			break;
+		case 'd':	/* driver for stdin/stdout */
+			driver = optarg;
+			break;
+		case 'e':	/* noecho for slave pty's line discipline */
+			noecho = 1;
+			break;
+		case 'f':	/* read the config file for driver */
+			pathconfig = optarg;
+			break;
+		case 'i':	/* ignore EOF on standard input */
+			ignoreeof = 1;
+			break;
+		case 'k':
+			if (optarg && !(keyfd = fopen(optarg, "r")))
+				err_sys("cannot open %s", optarg);
+			encflg = 1;
+			key_name = optarg;
+			break;
+		case 'n':	/* not interactive */
+			interactive = 0;
+			break;
+		case 'o':	/* output file */
+			if (optarg) {
+				outputfd = open(optarg, O_WRONLY | O_TRUNC | O_CREAT, 0666);
+				if (outputfd < 0)
+					err_sys("cannot open %s", optarg);
+			}
+			oflg = 1;
+			break;
+		case 'p':
+			rsafd = optarg;
+			encflg = 1;
+			break;
+		case 'r':	/* reacord data for replay */
+			if (optarg && !(timingfd = fopen(optarg, "w")))
+				err_sys("cannot open %s", optarg);
+			/*
+			 * Lock file for using tptyreplay at the same time. 
+			 */
+			fd = fileno(timingfd);
+			if (fd < 0)
+				err_sys("fileno error");
+			if (lock_reg(fd, F_SETLK, F_WRLCK, 0, SEEK_SET, 0) < 0)
+				err_sys("lock_reg error");
+			tflg = 1;
+			break;
+		case 't':	/* set timeout */
+			timeout = atoi(optarg);
+			break;
+		case 'u':	/* remove key file */
+			rmflg = 1;
+			break;
+		case 'v':	/* verbose */
+			verbose = 1;
+			break;
+		case 'x':	/* default driver */
+			defdriver = 1;
+			break;
+		case 'X':	/* output to /dev/null */
+			zeroflg = 1;
+			break;
+		case 'I':	/* manually interact */
+			manflg = 1;
+			break;
+		case '?':
+			err_quit("unrecognized option: -%c", optopt);
+		}
+	}
+	if (optind >= argc)
+		err_quit(HELP);
+
+	if (defdriver == 1 && driver)
+		err_quit(HELP);
+	if (defdriver == 1 && (!pathconfig))
+		err_quit(HELP);
+	if (defdriver == 0 && pathconfig)
+		err_quit(HELP);
+	if (encflg && !(keyfd && rsafd))
+		err_quit(HELP);
+
+	if (encflg && rmflg)
+		if (unlink(key_name) < 0)
+			err_sys("unlink error");
+
+	if (interactive) {	/* fetch current termios and window size */
+		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
+			err_sys("tcgetattr error on stdin");
+		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
+			err_sys("TIOCGWINSZ error");
+		pid = pty_fork(&fdm, slave_name, sizeof(slave_name),
+			       &orig_termios, &size);
+	} else {
+		pid = pty_fork(&fdm, slave_name, sizeof(slave_name),
+			       NULL, NULL);
+	}
+
+	if (pid < 0) {
+		err_sys("fork error");
+	} else if (pid == 0) {	/* child */
+		if (noecho)
+			set_noecho(STDIN_FILENO);	/* stdin is slave pty */
+		if (execvp(argv[optind], &argv[optind]) < 0)
+			err_sys("can't execute: %s", argv[optind]);
+	}
+	/* parent continue... */
+	tty = dup(fileno(stdout));	/* save the original stdout */
+	if (tty < 0)
+		err_sys("dup stdout error");
+
+	if (signal(SIGWINCH, sig_winch) == SIG_ERR)
+		err_sys("SIGWINCH error");
+
+	if (verbose) {
+		fprintf(stderr, "slave name = %s\n", slave_name);
+		if (driver != NULL)
+			fprintf(stderr, "driver = %s\n", driver);
+	}
+	if (interactive && driver == NULL && defdriver == 0) {
+		if (tty_raw(STDIN_FILENO) < 0)	/* user's tty to raw mode */
+			err_sys("tty_raw error");
+		if (atexit(tty_atexit) < 0)	/* reset user's tty on exit */
+			err_sys("atexit error");
+	}
+	if (driver || defdriver == 1) {
+		if ((childpid = fork()) < 0) {
+			err_sys("fork error");
+		} else if (childpid == 0) {	/* child */
+			do_driver(def_driver, 0);	/* use do_driver to 
+                                           changes our stdin/stdout */
+		} else {	/* parent */
+            if (waitpid(childpid, &status, 0) != childpid)
+                err_sys("waitpid");
+            ret = sys_exit(status);
+			if (manflg == 0) {
+				if (waitpid(pid, &status, 0) < 0)
+					err_sys("waitpid error");
+				ret += sys_exit(status);
+				exit(ret);
+			}
+
+            switch ( ret ) {
+                case 0:
+                    break;
+                case EXP_TIMEOUT:
+                    err_quit("tpty timed out");
+                    break;
+                case EXP_ERRNO:
+                    err_sys("tpty error");
+                    break;
+                default:
+                    err_quit("tpty failed");
+            }
+			do_driver(inter_driver, 1);	/* open /dev/tty to give
+                                           user keyboard control */
+		}
+	}
+	loop(fdm, ignoreeof);	/* copies stdin -> ptym, ptym -> stdout */
+
+    while (waitpid((pid_t)-1, &status, WNOHANG) > 0) /* must be non-block mode */
+        ret += sys_exit(status);
+
+	exit(ret);
+}
+
+static void
+set_noecho(int fd)
+{				/* turn off echo (for slave pty) */
+	struct termios  stermios;
+
+	if (tcgetattr(fd, &stermios) < 0)
+		err_sys("tcgetattr error");
+
+	stermios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+
+	/*
+	 * also turn off NL to CR/NL mapping on output 
+	 */
+	stermios.c_oflag &= ~(ONLCR);
+
+	if (tcsetattr(fd, TCSANOW, &stermios) < 0)
+		err_sys("tcsetattr error");
+}
+
+static void
+sig_winch(int signo)
+{
+	struct winsize  size;
+
+#ifdef AIX
+	if (signal(SIGWINCH, sig_winch) == SIG_ERR)
+		err_sys("signal SIGWINCH error");
+#endif
+
+	if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0) {
+		if (errno == EOPNOTSUPP)
+			return;
+		err_sys("TIOCGWINSZ error");
+	}
+	if (ioctl(fdm, TIOCSWINSZ, &size) < 0)
+		err_sys("TIOCSWINSZ, error");
+
+}
+@
+
+
+1.13
+log
+@add comment of WNOHANG.
+@
+text
+@d203 3
+a205 3
+				if (waitpid(pid, &status, WNOHANG) > 0) /* if not 'WNOHANG',
+                                                           the timeout will be block */
+					ret += sys_exit(status);
+@
+
+
+1.12
+log
+@switch (ret) to meet the return state of do_driver from read file.
+@
+text
+@d227 1
+a227 1
+    while (waitpid((pid_t)-1, &status, WNOHANG) > 0)
+@
+
+
+1.11
+log
+@*** empty log message ***
+@
+text
+@d201 1
+a202 1
+				ret = sys_exit(status);
+d208 13
+a220 3
+			/*
+			 * Reset the terminal line discipline. 
+			 */
+d222 1
+a222 1
+							 * user keyboard control */
+@
+
+
+1.10
+log
+@the test version.
+@
+text
+@d203 2
+a204 2
+				while (waitpid(pid, &status, WNOHANG) > 0)	/* if not 'WNOHANG', 
+                                                               the timeout will be block */
+@
+
+
+1.9
+log
+@release version.
+@
+text
+@d40 1
+a50 1
+	int             ret;
+a52 1
+
+d196 2
+a197 3
+			do_driver(def_driver, 0);	/* use do_driver to
+							 * changes our
+							 * stdin/stdout */
+d199 2
+a200 8
+			for (;;) {
+				if (waitpid(childpid, &status, 0) != childpid) {
+					if (errno == EINTR)
+						continue;
+					err_sys("waitpid");
+				} else
+					break;
+			}
+d203 2
+a204 2
+				if (waitpid(pid, &status, WNOHANG) == pid)	/* if not 'WNOHANG', the
+										 * timeout will be block */
+d216 5
+a220 7
+retry:
+	if (waitpid(pid, &status, 0) != pid && errno != ECHILD) {
+		if (errno == EINTR)
+			goto retry;
+		err_sys("waitpid");
+	}
+	exit(sys_exit(status));
+@
+
+
+1.8
+log
+@cancel child's exit(0), add parent kill(pid, SIGTERM).
+@
+text
+@d39 1
+d50 1
+a50 2
+	static int      child_fork;
+	int             status, ret;
+d197 3
+a199 3
+			child_fork = 1;
+			do_driver(def_driver, 0);	/* use do_driver to changes
+						 * our stdin/stdout */
+d201 8
+a208 8
+            for (;;) {
+			    if (waitpid(childpid, &status, 0) != childpid) {
+                    if (errno == EINTR)
+                        continue;
+			    	err_sys("waitpid");
+                } else 
+                    break;
+            }
+d211 3
+a213 2
+                if (kill(pid, SIGTERM) < 0)
+                    err_sys("kill failed");
+a223 3
+	if (child_fork == 1) {
+		sleep(1);	/* wait for the signal SIGCHLD */
+	}
+@
+
+
+1.8.2.1
+log
+@the debug version, add FILE *fdbg.
+@
+text
+@a38 4
+int             status;
+int             ret;
+
+FILE *fdbg;
+d49 2
+a53 3
+    fdbg = fopen("./dbg.txt", "w");
+
+
+d197 3
+a199 4
+            fdebug(fdbg, "child = %ld\n", getpid());
+			do_driver(def_driver, 0);	/* use do_driver to
+							 * changes our
+							 * stdin/stdout */
+d201 8
+a208 9
+            fdebug(fdbg, "parent = %ld; ret = %d\n", getpid(), ret);
+			for (;;) {
+				if (waitpid(childpid, &status, 0) != childpid) {
+					if (errno == EINTR)
+						continue;
+					err_sys("waitpid");
+				} else
+					break;
+			}
+d211 2
+a212 9
+                fdebug(fdbg, "parent = %ld; ret = %d\n", getpid(), ret);
+#if 0
+				while (waitpid(pid, &status, WNOHANG) > 0)	/* if not 'WNOHANG', 
+                                                               the timeout will be block */
+					ret += sys_exit(status);
+#endif
+                waitpid(pid, &status, 0);
+                ret = sys_exit(status);
+                fdebug(fdbg, "parent = %ld; ret = %d\n", getpid(), ret);
+d223 10
+a232 6
+
+    while (waitpid((pid_t)-1, &status, WNOHANG) > 0)
+        ret += sys_exit(status);
+
+    fdebug(fdbg, "pid = %ld; ret = %d\n", (long)getpid(), ret);
+	exit(ret);
+@
+
+
+1.8.2.2
+log
+@chang waitpid from 'while' to 'if'.
+@
+text
+@d219 3
+a221 3
+				if (waitpid(pid, &status, WNOHANG) == pid) { /* if not 'WNOHANG',
+                                                                the timeout will be block */
+                    fdebug(fdbg, "sys_exit = %d\n", sys_exit(status));
+d223 3
+a225 1
+                }
+@
+
+
+1.8.1.1
+log
+@use sig_chld and waitpid to get the children's exit state, but not successful in practice.
+@
+text
+@a20 3
+static void
+sig_chld(int);
+
+a38 1
+static volatile sig_atomic_t ec; /* the exit code of the process */
+d49 2
+a52 7
+    if (signal_rest(SIGCHLD, sig_chld) == SIG_ERR) /* use POSIX sigaction
+                                                      because the SIGCHLD may
+                                                      interrupt the system call,
+                                                      and the older systems removed
+                                                      the signal handler each time
+                                                      it was executed (AIX) */
+        err_sys("SIGCHLD error");
+d197 3
+a199 3
+			do_driver(def_driver, 0);	/* use do_driver to
+							 * changes our
+							 * stdin/stdout */
+d201 14
+a214 4
+            sleep(1);
+			if (manflg == 0)
+                exit(ec);
+
+d216 1
+a216 1
+			 * Interaction allows user get control from the keyboard.
+d223 10
+a232 2
+    sleep(1);
+	/* exit(ec); */
+a272 19
+
+static void
+sig_chld(int signo)
+{
+    pid_t pid;
+    int stat;
+    FILE *fp = fopen("./dbg.txt", "w");
+
+retry:
+    errno = 0;
+    while ((pid = waitpid((pid_t)-1, &stat, WNOHANG)) > 0)
+        ;
+    if (pid == (pid_t)-1 && errno == EINTR)
+        goto retry;
+    ec += sys_exit(stat);
+    fdebug(fp, "signal set ec = %d\n", ec);
+    if (ec != 0)
+        exit(ec);
+}
+@
+
+
+1.7
+log
+@cancel the waitpid(pid) when manflg == 0.
+@
+text
+@d211 2
+a224 1
+		exit(0);
+@
+
+
+1.6
+log
+@add condition of do_driver(func, isinter) to take care of the
+driver which user define themselves.
+@
+text
+@a210 10
+                for (;;) {
+				    if (waitpid(pid, &status, 0) != pid) {	/* wait for pty_fork's
+				    					 * child */
+                        if (errno == EINTR)
+                            continue;
+				    	err_sys("waitpid");
+                    } else
+                        break;
+                }
+				ret += sys_exit(status);
+@
+
+
+1.5
+log
+@Because the SIGCHLD will cause EINTR, so set restart for all waitpid function.
+@
+text
+@d13 1
+a13 1
+do_driver(int (*f_driver) (void));	/* at the file do_driver.c */
+d198 1
+a198 1
+			do_driver(def_driver);	/* use do_driver to changes
+d226 1
+a226 1
+			do_driver(inter_driver);	/* open /dev/tty to give
+@
+
+
+1.4
+log
+@release version.
+@
+text
+@d201 8
+a208 2
+			if (waitpid(childpid, &status, 0) != childpid)
+				err_sys("waitpid");
+d211 9
+a219 3
+				if (waitpid(pid, &status, 0) != pid)	/* wait for pty_fork's
+									 * child */
+					err_sys("waitpid");
+@
+
+
+1.3
+log
+@to allow user control the keyboard, change do_driver() to
+do_driver(int (*func)(void));
+and after the def_driver's child process is over,
+the parent process do_driver(inter_driver) again.
+@
+text
+@d13 1
+a13 1
+do_driver(int (*f_driver)(void));		/* at the file do_driver.c */
+d49 1
+a49 1
+	int             child_fork;
+a52 11
+	/*
+	 * Because on some systems the timeout will generate coredump, so set
+	 * core dump size == 0 
+	 */
+	struct rlimit   rl;
+	if (getrlimit(RLIMIT_CORE, &rl) < 0)
+		err_sys("getrlimit RLIMIT_CORE error");
+	rl.rlim_cur = 0;
+	if (setrlimit(RLIMIT_CORE, &rl) < 0)
+		err_sys("setrlimit RLIMIT_CORE error");
+
+d198 2
+a199 1
+			do_driver(def_driver);	/* use do_driver to changes our stdin/stdout */
+d204 5
+a208 4
+                ret = sys_exit(status);
+                if (waitpid(pid, &status, 0) != pid) /* wait for pty_fork's child */
+                    err_sys("waitpid");
+                ret += sys_exit(status);
+d210 1
+a210 2
+            }
+
+d214 2
+a215 1
+            do_driver(inter_driver); /* open /dev/tty to give user keyboard control */
+d223 4
+a226 1
+	if (waitpid(pid, &status, 0) != pid)
+d228 1
+d261 3
+a263 1
+	if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
+d265 1
+a269 1
+
+@
+
+
+1.2
+log
+@*** empty log message ***
+@
+text
+@a7 2
+static struct termios savetty;
+static int      ttysavefd = -1;
+d13 1
+a13 1
+do_driver(void);		/* at the file do_driver.c */
+a20 4
+static int
+tty_flush(int);
+static void
+tty_resume(void);
+d209 1
+a209 1
+			do_driver();	/* changes our stdin/stdout */
+d224 1
+a224 4
+			if (tty_flush(STDIN_FILENO) < 0)
+				err_sys("tty_cbreak error");
+			if (atexit(tty_resume) < 0)
+				err_sys("atexit error");
+a272 35
+static int
+tty_flush(int fd)
+{
+	struct termios  stermios;
+
+	if (tcgetattr(fd, &savetty) < 0)
+		return -1;
+	stermios = savetty;
+
+	/* echo off, canonical mode off, signal chars off */
+	stermios.c_lflag &= ~(ECHO | ICANON | ISIG);
+
+	/* also turn off NL to CR/NL mapping on output */
+	stermios.c_oflag &= ~(ONLCR);
+
+	/* output processing off */
+	stermios.c_oflag &= ~(OPOST);
+
+	stermios.c_cc[VMIN] = 1;/* 1 byte at a time, no timer */
+	stermios.c_cc[VTIME] = 0;
+
+	if (tcsetattr(fd, TCSANOW, &stermios) < 0)
+		return -1;
+
+	ttysavefd = fd;
+	return 0;
+}
+
+static void
+tty_resume(void)
+{
+	if (ttysavefd >= 0)
+		if (tcsetattr(ttysavefd, TCSANOW, &savetty) < 0)
+			err_sys("tcsetattr ttysavefd error");
+}
+@
+
+
+1.1
+log
+@fix bug <can't execute: ...: No such file or directory>, but exit code is still zero
+@
+text
+@d56 1
+a56 1
+	int             status;
+d219 7
+a225 2
+			if (manflg == 0)
+				exit(sys_exit(status));	/* parent exit */
+@

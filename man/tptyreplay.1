@@ -1,0 +1,139 @@
+.TH TPTYREPLAY 1 "1 Mar 2015" "1.01" "tptyreplay man page"
+.SH "NAME"
+tptyreplay \- play back typetpty, using timing information
+.SH "SYNOPSIS"
+.B tptyreplay
+[options]
+.B \-t
+.I timingfile
+.B \-s
+.I typetpty
+
+.SH "DESCRIPTION"
+This program replays a typetpty, using timing information to ensure that
+output happens in the same rhythm as it originally appeared when the 
+.BR tpty (1)
+was recorded.
+.PP
+The replay simply displays the information again; the programs
+that were run when the typetpty was being recorded are not run again.
+Since the same information is simply being displayed,
+.B tptyreplay
+is only guaranteed to work properly if run on the same type of
+terminal the typetpty was recorded on.  Otherwise, any escape characters
+in the typetpty may be interpreted differently by the terminal to
+which
+.B tptyreplay
+is sending its output.
+.PP
+The
+.I timingfile
+which specified by
+.B \-t
+is what
+.BR tpty (1)
+outputs to
+.I recordfile
+if it is
+run with the
+.B \-r
+parameter.
+.PP
+The
+.I typetpty
+which specified by
+.B \-s
+is what
+.BR tpty (1)
+outputs to
+.I outfile
+if it is 
+run with the
+.B \-o
+parameter.
+.PP
+If the 
+.B \-d
+.I divisor
+parameter is specified, it is used as a speed-up multiplier.
+For example, a speed-up of 2 makes
+.B tptyreplay
+go twice as fast, and a speed-up of 0.1 makes it go ten times slower
+than the original session.
+.SH OPTIONS
+Valid options are:
+.TP
+.B \-t 
+\fIfile\fR
+File containing \fBtpty\fR's timing output.
+.TP
+.B \-s
+\fIfile\fR
+File containing \fBtpty\fR's terminal output.
+.TP
+.B \-d
+\fInumber\fR
+Speed up the replay displaying this
+.I number
+of times.  The argument is a floating point number.  It's called divisor
+because it divides the timings by this factor.
+.TP
+.B \-m
+\fInumber\fR
+Set the maximum delay between transcript updates to
+.I number
+of seconds.  The argument is a floating point number.  This can be used to
+avoid long pauses in the transcript replay.
+.PP
+.TP
+.B Subcommands
+Valid interactive subcommands are:
+.TP
+.B SPACE
+Pause/Play.
+.TP
+.B u
+Make two times faster than the current speed.
+.TP
+.B d
+Make two times slower than the current speed.
+.TP
+.B b
+Playback one row of the timing file.
+.TP
+.B f
+Fast-forward one row of the timing file.
+.TP
+.B ENTER
+Resume to the original speed.
+.TP
+.B ^C
+End display.
+
+.SH "NOTES"
+The subcommand '\fBb\fP' and '\fBf\fP'
+are weakly supported.
+Before playback, you must pause (subcommand '\fBSPACE\fP') the replay first.
+
+.SH "EXAMPLE"
+.nf
+% tpty -o tpty.out -r tpty.tm "${SHELL:-/usr/bin/ksh}"
+% ls
+<etc, etc>
+% exit
+<exit>
+% tptyreplay -t tpty.tm -s tpty.out
+.nf
+.SH "SEE ALSO"
+.BR tpty (1)
+.SH "AUTHOR"
+The 
+.B tptyreplay
+was based on
+GNU/Linux
+.B scriptreplay
+program.
+The program was re-written by
+Gong Cun (gongcunjust@gmail.com)
+to work on both AIX, MacOSX and GNU/Linux.
+

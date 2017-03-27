@@ -1,0 +1,5 @@
+./tpty -x -f ./test.txt.aix -o test.out telnet localhost
+./tpty -s -x -f ./passwd.txt.aix -o passwd.out passwd cap
+./tpty -x -f ./telnet.txt.macos -o telnet.out telnet -l gongcun 192.168.0.104
+./tpty -o tpty.out -r tpty.tm /bin/bash
+tr -s "\015\032\033" "\n" <tpty.audit >tpty.audit.clean

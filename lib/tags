@@ -1,0 +1,42 @@
+clr_fl	./clr_fl.c	/^void clr_fl(int fd, int flag)$/
+create_rsa_with_filename	./openssl_rsa.c	/^create_rsa_with_filename(char *filename, int publi/
+def_driver	./def_driver.c	/^def_driver(void)$/
+err_doit	./error.c	/^err_doit(int errnoflag, int error, const char *fmt/
+err_dump	./error.c	/^err_dump(const char *fmt,...)$/
+err_exit	./error.c	/^err_exit(int error, const char *fmt,...)$/
+err_msg	./error.c	/^err_msg(const char *fmt,...)$/
+err_quit	./error.c	/^err_quit(const char *fmt,...)$/
+err_ret	./error.c	/^err_ret(const char *fmt,...)$/
+err_ssl	./openssl_rsa.c	/^void err_ssl(void)$/
+err_sys	./error.c	/^err_sys(const char *fmt,...)$/
+f	./def_driver.c	/^static struct f {$/
+fdebug	./fdebug.c	/^fdebug(FILE * fp, const char *fmt,...)$/
+fp2f	./def_driver.c	/^fp2f(FILE * fp, int *p)$/
+i_read	./def_driver.c	/^i_read(int fd, int tm, char *buf, int buf_size)$/
+ifeq	./Makefile	/^ifeq ($(CC),xlc)$/
+inter_driver	./inter_driver.c	/^inter_driver(void)$/
+lock_reg	./lockreg.c	/^lock_reg(int fd, int cmd, int type, off_t offset, /
+lock_test	./locktest.c	/^lock_test(int fd, int type, off_t offset, int when/
+match_readin	./def_driver.c	/^match_readin(char *readin, char *str)$/
+private_decrypt	./openssl_rsa.c	/^private_decrypt(char *enc_data, int data_len, char/
+pty_fork	./pty_fork.c	/^pty_fork(int *ptrfdm, char *slave_name, int slave_/
+ptym_open	./pty_open.c	/^int ptym_open(char *pts_name, int pts_namesz)$/
+ptys_open	./pty_open.c	/^int ptys_open(char *pts_name)$/
+public_encrypt	./openssl_rsa.c	/^public_encrypt(char *data, int data_len, char *key/
+readn	./readn.c	/^ssize_t readn(int fd, void *ptr, size_t n)$/
+return_def_driver	./def_driver.c	/^#define return_def_driver(x) {return_val = x; goto/
+return_inter_driver	./inter_driver.c	/^#define return_inter_driver(x) {return_val = x; go/
+rm_nulls	./def_driver.c	/^static int rm_nulls(char *s, int c)$/
+s_pipe	./s_pipe.c	/^int s_pipe(int fd[2])$/
+set_fl	./set_fl.c	/^void set_fl(int fd, int flag)$/
+signal_intr	./signal_intr.c	/^Sigfunc *signal_intr(int signo, Sigfunc *handler)$/
+signal_rest	./signal_rest.c	/^Sigfunc *signal_rest(int signo, Sigfunc *handler)$/
+strip	./strip.c	/^strip(char buf[], char *str)$/
+strregex	./strregex.c	/^strregex(char *str1, char *str2)$/
+sys_exit	./sys_exit.c	/^sys_exit(int status)$/
+tty_atexit	./tty_noncanon.c	/^tty_atexit(void)$/
+tty_cbreak	./tty_noncanon.c	/^tty_cbreak(int fd)$/
+tty_raw	./tty_noncanon.c	/^tty_raw(int fd)$/
+tty_reset	./tty_noncanon.c	/^tty_reset(int fd)$/
+tty_termios	./tty_noncanon.c	/^tty_termios(void)$/
+writen	./writen.c	/^writen(int fd, void *ptr, size_t n)$/

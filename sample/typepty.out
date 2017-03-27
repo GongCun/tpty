@@ -1,0 +1,178 @@
+[?25l[1;61H2015-02-28 18:15:38[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP OMS Main Menu             [0m[4;1H1) Goto CAP Status Menu.[5;1H2) Goto CAP Server Start Menu.[6;1H3) Goto CAP Server Stop Menu.[7;1H4) Goto CAP Server Logs Menu.[8;1H5) Goto Miscellaneous system Menu.[9;1H6) Goto Individual Server Menu.[11;1Hb) Go back one menu[11;31Hm) Go to the main menu[11;61Hx) Quit[13;1H[1m[37mEnter your choice:  [0m[13;21H[1m[36m1              [0m[4;1H[7m1) Goto CAP Status Menu. [0m[1;61H2015-02-28 18:15:39[1;61H2015-02-28 18:15:40[1;61H2015-02-28 18:15:41[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m1              [0m[4;1H[7m1) Query MQ Listener. [0m[1;61H2015-02-28 18:15:42[H[2J[?25h5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
+Starting MQSC for queue manager CAPUQ01.
+
+
+     1 : display lsstatus(CAPUQ01.LISTENER) all
+AMQ8631: Display listener status details.
+   LISTENER(CAPUQ01.LISTENER)              STATUS(RUNNING)
+   PID(35520598)                           STARTDA(2015-01-22)
+   STARTTI(14.14.08)                       DESCR( )
+   TRPTYPE(TCP)                            CONTROL(QMGR)
+   IPADDR(*)                               PORT(1414)
+   BACKLOG(100)                         
+     2 : end
+One MQSC command read.
+No commands have a syntax error.
+All valid MQSC commands were processed.
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m1              [0m[21;1H[1m[37mPrevious choice:   [0m(1)[4;1H[7m1) Query MQ Listener. [0m[1;61H2015-02-28 18:15:43[4;1H1) Query MQ Listener. [19;21H[1m[36m2              [0m[5;1H[7m2) Query MQ Sender Channel (CAP to IXP). [0m[H[2J[?25h5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
+Starting MQSC for queue manager CAPUQ01.
+
+
+     1 : display chstatus(REPOS.QM1.CH)
+AMQ8420: Channel Status not found.
+     2 : end
+One MQSC command read.
+No commands have a syntax error.
+One valid MQSC command could not be processed.
+[7mPress any key to return... [0m[?25h[?25l[1;61H2015-02-28 18:15:45[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m2              [0m[21;1H[1m[37mPrevious choice:   [0m(2)[5;1H[7m2) Query MQ Sender Channel (CAP to IXP). [0m[5;1H2) Query MQ Sender Channel (CAP to IXP). [19;21H[1m[36m3              [0m[6;1H[7m3) Query MQ Receiver Channel (IXP to CAP). [0m[H[2J[?25h5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
+Starting MQSC for queue manager CAPUQ01.
+
+
+     1 : display chstatus(CAPUQ01.CLUSRCVR.CH)
+AMQ8417: Display Channel Status details.
+   CHANNEL(CAPUQ01.CLUSRCVR.CH)            CHLTYPE(CLUSRCVR)
+   CONNAME(22.236.180.191)                 CURRENT
+   RQMNAME(ESB.QM1)                        STATUS(RUNNING)
+   SUBSTATE(RECEIVE)                    
+     2 : end
+One MQSC command read.
+No commands have a syntax error.
+All valid MQSC commands were processed.
+[7mPress any key to return... [0m[?25h[?25l[1;61H2015-02-28 18:15:46[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m3              [0m[21;1H[1m[37mPrevious choice:   [0m(3)[6;1H[7m3) Query MQ Receiver Channel (IXP to CAP). [0m[6;1H3) Query MQ Receiver Channel (IXP to CAP). [19;21H[1m[36m4              [0m[7;1H[7m4) Query MQ Service Channel. [0m[H[2J[?25h5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
+Starting MQSC for queue manager CAPUQ01.
+
+
+     1 : display chstatus(SYSTEM.DEF.SVRCONN)
+AMQ8417: Display Channel Status details.
+   CHANNEL(SYSTEM.DEF.SVRCONN)             CHLTYPE(SVRCONN)
+   CONNAME(22.236.180.222)                 CURRENT
+   STATUS(RUNNING)                         SUBSTATE(RECEIVE)
+     2 : end
+One MQSC command read.
+No commands have a syntax error.
+All valid MQSC commands were processed.
+[7mPress any key to return... [0m[?25h[?25l[1;61H2015-02-28 18:15:47[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m4              [0m[21;1H[1m[37mPrevious choice:   [0m(4)[7;1H[7m4) Query MQ Service Channel. [0m[7;1H4) Query MQ Service Channel. [19;21H[1m[36mx              [0m[17;61H[7mx) Quit [0m[1;61H2015-02-28 18:15:48[17;61Hx) Quit [19;21H[1m[36m1              [0m[4;1H[7m1) Query MQ Listener. [0m[1;61H2015-02-28 18:15:49[4;1H1) Query MQ Listener. [19;21H[1m[36m2              [0m[5;1H[7m2) Query MQ Sender Channel (CAP to IXP). [0m[5;1H2) Query MQ Sender Channel (CAP to IXP). [19;21H[1m[36m3              [0m[6;1H[7m3) Query MQ Receiver Channel (IXP to CAP). [0m[6;1H3) Query MQ Receiver Channel (IXP to CAP). [19;21H[1m[36m4              [0m[7;1H[7m4) Query MQ Service Channel. [0m[1;61H2015-02-28 18:15:50[H[2J[?25h5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
+Starting MQSC for queue manager CAPUQ01.
+
+
+     1 : display chstatus(SYSTEM.DEF.SVRCONN)
+AMQ8417: Display Channel Status details.
+   CHANNEL(SYSTEM.DEF.SVRCONN)             CHLTYPE(SVRCONN)
+   CONNAME(22.236.180.222)                 CURRENT
+   STATUS(RUNNING)                         SUBSTATE(RECEIVE)
+     2 : end
+One MQSC command read.
+No commands have a syntax error.
+All valid MQSC commands were processed.
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m4              [0m[21;1H[1m[37mPrevious choice:   [0m(4)[7;1H[7m4) Query MQ Service Channel. [0m[1;61H2015-02-28 18:15:51[19;21H[1m[36munknown choice [0m[1;61H2015-02-28 18:15:52[7;1H4) Query MQ Service Channel. [19;21H[1m[36m5              [0m[8;1H[7m5) Query MQ Cluster Queue. [0m[H[2J[?25h5724-H72 (C) Copyright IBM Corp. 1994, 2011.  ALL RIGHTS RESERVED.
+Starting MQSC for queue manager CAPUQ01.
+
+
+     1 : display q(ESB.CAP.REQ.CQ1) usage put get type curdepth
+AMQ8409: Display Queue details.
+   QUEUE(ESB.CAP.REQ.CQ1)                  TYPE(QLOCAL)
+   CURDEPTH(0)                             GET(ENABLED)
+   PUT(ENABLED)                            USAGE(NORMAL)
+     2 : display q(ESB.CAP.RES.LQ1) usage put get type curdepth
+AMQ8409: Display Queue details.
+   QUEUE(ESB.CAP.RES.LQ1)                  TYPE(QLOCAL)
+   CURDEPTH(81)                            GET(ENABLED)
+   PUT(ENABLED)                            USAGE(NORMAL)
+     3 : end
+2 MQSC commands read.
+No commands have a syntax error.
+All valid MQSC commands were processed.
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m5              [0m[21;1H[1m[37mPrevious choice:   [0m(5)[8;1H[7m5) Query MQ Cluster Queue. [0m[1;61H2015-02-28 18:15:53[8;1H5) Query MQ Cluster Queue. [19;21H[1m[36m6              [0m[9;1H[7m6) Query WAS Application. [0m[H[2J[?25hList running applications (2015/02/28 18:15:54)
+CCAPIXPA_ear
+CESBTXNG_ear
+DefaultApplication
+ManagementEJB
+OCAPIXPA_ear
+S.CONSVR_ear
+S.FILSVR_ear
+S.LSNSVR_ear
+S.RDOSVR_ear
+S.SCHSVR_ear
+S.SQNSVR_ear
+SCAPIXPA_ear
+SESBTXNG_ear
+SVRMNG.ear
+SchedulerCalendars
+filetransferSecured
+ibmasyncrsp
+isclite
+ivtApp
+query
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m6              [0m[21;1H[1m[37mPrevious choice:   [0m(6)[9;1H[7m6) Query WAS Application. [0m[1;61H2015-02-28 18:16:03[9;1H6) Query WAS Application. [19;21H[1m[36m7              [0m[10;1H[7m7) Query CICS Service. [0m[H[2J[?25h cicssfs.SFS_SERV                  42729644     active
+ cics.CAP                          48234690     active
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m7              [0m[21;1H[1m[37mPrevious choice:   [0m(7)[10;1H[7m7) Query CICS Service. [0m[1;61H2015-02-28 18:16:04[10;1H7) Query CICS Service. [19;21H[1m[36m8              [0m[11;1H[7m8) Query CTG Service. [0m[H[2J[?25hCCL8001I CICSCLI - CICS Transaction Gateway Client Daemon Control Program
+CCL0002I (C) Copyright IBM Corporation 1994, 2012.  All rights reserved.
+CCL8041I The Client daemon is using the following servers:
+CCL8042I Server 'CAP' (using 'TCPIP' to '127.0.0.1') is available
+[7mPress any key to return... [0m[?25h[?25l[1;61H2015-02-28 18:16:05[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m8              [0m[21;1H[1m[37mPrevious choice:   [0m(8)[11;1H[7m8) Query CTG Service. [0m[11;1H8) Query CTG Service. [19;21H[1m[36m9              [0m[12;1H[7m9) Query COMM. Service. [0m[H[2J[?25htcp4       0      0  *.9886                 *.*                    LISTEN
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m9              [0m[21;1H[1m[37mPrevious choice:   [0m(9)[12;1H[7m9) Query COMM. Service. [0m[1;61H2015-02-28 18:16:07[12;1H9) Query COMM. Service. [19;21H[1m[36ma              [0m[13;1H[7ma) Query CORE Service. [0m[H[2J[?25hTerm-Id         : 000L318
+Tr-Mmo          : BPC
+Msg-Type        : N
+Msg-Code        : BP0155
+Tr-Branch       : 88800020000
+Status=Normal
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36ma              [0m[21;1H[1m[37mPrevious choice:   [0m(a)[13;1H[7ma) Query CORE Service. [0m[1;61H2015-02-28 18:16:08[13;1Ha) Query CORE Service. [19;21H[1m[36mc              [0m[14;1H[7mc) Query JOB GROUP Service. [0m[H[2J[?25hJOB GROUP version 2.7.14
+System started, pid = 31523018
+[7mPress any key to return... [0m[?25h[?25l[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36mc              [0m[21;1H[1m[37mPrevious choice:   [0m(c)[14;1H[7mc) Query JOB GROUP Service. [0m[1;61H2015-02-28 18:16:10[14;1Hc) Query JOB GROUP Service. [19;21H[1m[36md              [0m[15;1H[7md) Query ICS Service. [0m[H[2J[?25hS.SQNSVR  started open    open    02-24 12:52:12  SEQ SERVER          
+S.CONSVR  started close   open    02-24 12:52:12  IO SERVER           
+S.RDOSVR  started open    open    02-24 12:52:12  REDO RVS SERVER     
+S.LSNSVR  started close   open    02-24 12:52:13  SYS MON LISTEN SERVER
+S.MDBSVR  stoped  close   close                   JMS SERVER          
+S.FILSVR  started close   open    02-24 12:57:43  FILE SERVER         
+S.SCHSVR  started open    open    02-24 12:58:00  SCHEDU SERVER       
+CCAPIXPA  started open    open    02-24 12:58:18  CAP connecting Service Adapter
+CESBTXNG  started open    open    02-24 12:58:41  ESB connecting Service Adapter
+OCAPIXPA  started open    open    02-24 12:58:53  Common Logic Controller
+SCAPIXPA  started open    open    02-24 12:59:05  ESB dispatching Adapter
+SESBTXNG  started open    open    02-24 12:59:12  CAP dispatching Adapter
+
+[7mPress any key to return... [0m[?25h[?25l[1;61H2015-02-28 18:16:12[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Server Status Menu        [0m[4;1H1) Query MQ Listener.[5;1H2) Query MQ Sender Channel (CAP to IXP).[6;1H3) Query MQ Receiver Channel (IXP to CAP).[7;1H4) Query MQ Service Channel.[8;1H5) Query MQ Cluster Queue.[9;1H6) Query WAS Application.[10;1H7) Query CICS Service.[11;1H8) Query CTG Service.[12;1H9) Query COMM. Service.[13;1Ha) Query CORE Service.[14;1Hc) Query JOB GROUP Service.[15;1Hd) Query ICS Service.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36md              [0m[21;1H[1m[37mPrevious choice:   [0m(d)[15;1H[7md) Query ICS Service. [0m[1;61H2015-02-28 18:16:13[15;1Hd) Query ICS Service. [19;21H[1m[36mb              [0m[17;1H[7mb) Go back one menu [0m[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP OMS Main Menu             [0m[4;1H1) Goto CAP Status Menu.[5;1H2) Goto CAP Server Start Menu.[6;1H3) Goto CAP Server Stop Menu.[7;1H4) Goto CAP Server Logs Menu.[8;1H5) Goto Miscellaneous system Menu.[9;1H6) Goto Individual Server Menu.[11;1Hb) Go back one menu[11;31Hm) Go to the main menu[11;61Hx) Quit[13;1H[1m[37mEnter your choice:  [0m[13;21H[1m[36m1              [0m[15;1H[1m[37mPrevious choice:   [0m(1)[4;1H[7m1) Goto CAP Status Menu. [0m[1;61H2015-02-28 18:16:14[1;61H2015-02-28 18:16:15[1;61H2015-02-28 18:16:16[1;61H2015-02-28 18:16:17[4;1H1) Goto CAP Status Menu. [13;21H[1m[36m2              [0m[5;1H[7m2) Goto CAP Server Start Menu. [0m[5;1H2) Goto CAP Server Start Menu. [13;21H[1m[36m3              [0m[6;1H[7m3) Goto CAP Server Stop Menu. [0m[6;1H3) Goto CAP Server Stop Menu. [13;21H[1m[36m4              [0m[7;1H[7m4) Goto CAP Server Logs Menu. [0m[7;1H4) Goto CAP Server Logs Menu. [13;21H[1m[36m5              [0m[8;1H[7m5) Goto Miscellaneous system Menu. [0m[8;1H5) Goto Miscellaneous system Menu. [13;21H[1m[36m6              [0m[9;1H[7m6) Goto Individual Server Menu. [0m[1;61H2015-02-28 18:16:18[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP Individual Server Menu    [0m[4;1H1) Go to HACMP menu...[5;1H2) Go to MQ Server menu...[6;1H3) Go to WebSphere Application Server menu...[7;1H4) Go to CICS Server menu...[8;1H5) Go to CAP Service menu...[9;1H6) Go to ICS Service menu...[11;1Hb) Go back one menu[11;31Hm) Go to the main menu[11;61Hx) Quit[13;1H[1m[37mEnter your choice:  [0m[13;21H[1m[36m1              [0m[4;1H[7m1) Go to HACMP menu... [0m[1;61H2015-02-28 18:16:19[1;61H2015-02-28 18:16:20[1;61H2015-02-28 18:16:21[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP HACMP Operations Menu     [0m[4;1H1) HACMP Cluster Status Monitor.[5;1H2) View Current State.[6;1H3) Show Cluster Services.[7;1H4) Start Cluster Services.[8;1H5) Stop Cluster Services.[9;1H6) Show the Current State of Applications and Resource Groups.[10;1H7) Bring a Resource Group Online.[11;1H8) Bring a Resource Group Offline.[12;1H9) Move a Resource Group to Another Node.[13;1Ha) Scan the HACMP for AIX Scripts log.[14;1Hc) Scan the HACMP for AIX System log.[15;1Hd) Scan the C-SPOC System Log File.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m1              [0m[4;1H[7m1) HACMP Cluster Status Monitor. [0m[1;61H2015-02-28 18:16:22[4;1H1) HACMP Cluster Status Monitor. [19;21H[1m[36m2              [0m[5;1H[7m2) View Current State. [0m[H[2J[?25hclodmget:  Cannot open class HACMPadapter
+clodmget:  Cannot open class HACMPnode
+clodmget:  Cannot open class HACMPadapter
+clodmget:  Cannot open class HACMPnode
+clodmget:  Cannot open class HACMPadapter
+clodmget:  Cannot open class HACMPnode
+clodmget:  Cannot open class HACMPadapter
+clodmget:  Cannot open class HACMPnode
+
+Obtaining information via SNMP from Node: tucapco1...
+
+_____________________________________________________________________________
+Cluster Name: tucapco_cluster
+Cluster State: UP
+Cluster Substate: STABLE
+_____________________________________________________________________________
+
+Node Name: tucapco2             State: UP
+
+  Network Name: net_ether_02       State: UP
+
+    Address: 22.236.180.221  Label: tucapco2           State: UP
+
+Node Name: tucapco1             State: UP
+
+  Network Name: net_ether_02       State: UP
+
+    Address: 22.236.180.220  Label: tucapco1           State: UP
+    Address: 22.236.180.222  Label: tucapco            State: UP
+
+clodmget:  Cannot open class HACMPadapter
+clodmget:  Cannot open class HACMPnode
+
+Cluster Name: tucapco_cluster 
+
+Resource Group Name: resgrp1
+Startup Policy: Online On Home Node Only
+Fallover Policy: Fallover To Next Priority Node In The List
+Fallback Policy: Never Fallback
+Site Policy: ignore
+Node                         Group State      
+---------------------------- --------------- 
+tucapco1                     ONLINE          
+tucapco2                     OFFLINE         
+[7mPress any key to return... [0m[?25h[?25l[1;61H2015-02-28 18:16:25[H[2J[1;1H[1m[37m[44mtucapco1[0m[1;16H[1m[33mCAP HACMP Operations Menu     [0m[4;1H1) HACMP Cluster Status Monitor.[5;1H2) View Current State.[6;1H3) Show Cluster Services.[7;1H4) Start Cluster Services.[8;1H5) Stop Cluster Services.[9;1H6) Show the Current State of Applications and Resource Groups.[10;1H7) Bring a Resource Group Online.[11;1H8) Bring a Resource Group Offline.[12;1H9) Move a Resource Group to Another Node.[13;1Ha) Scan the HACMP for AIX Scripts log.[14;1Hc) Scan the HACMP for AIX System log.[15;1Hd) Scan the C-SPOC System Log File.[17;1Hb) Go back one menu[17;31Hm) Go to the main menu[17;61Hx) Quit[19;1H[1m[37mEnter your choice:  [0m[19;21H[1m[36m2              [0m[21;1H[1m[37mPrevious choice:   [0m(2)[5;1H[7m2) View Current State. [0m[5;1H2) View Current State. [19;21H[1m[36mx              [0m[17;61H[7mx) Quit [0m[1;61H2015-02-28 18:16:26[H[2J[?25h[?25h

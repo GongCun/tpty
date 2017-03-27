@@ -1,0 +1,11 @@
+assword:%<ENCRYPT>
+.*#%hostname
+.*# %b.ksh
+continue $%y%<REPEAT>
+continue second%n%<REPEAT>
+.*#%su - root
+assword:%<ENCRYPT>
+.*#%whoami
+.*#%exit
+ucmtest@gccapco2[/home/ucmtest]#%date "+%y%m%d"
+ucmtest@gccapco2[/home/ucmtest]#%exit

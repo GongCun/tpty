@@ -1,0 +1,357 @@
+.\" Manpage for tpty.
+.\" Contact gong_cun@bocmacau.com to correct errors or typos.
+.TH tpty 1 "10 April 2015" "1.07" "tpty man page"
+.SH NAME
+\fBtpty\fP \- tpty execute the program in a session of its own, connected to a pseudo terminal.
+.SH SYNOPSIS
+\fBtpty\fP [ -x -f config ] [ -t timeout -d driver ] [ -einuvXI -o outfile -r recordfile -a auditfile -p RSAPrivateKey -k EncrypedKey ] program [ args ... ]
+.SH DESCRIPTION
+\fBtpty\fP disables the output buffering that occurs when program ouput is redirected.
+For example, suppose you are watching the output of Background-Running Job,
+You can disable this automatic buffering as follows:
+.nf
+
+        tpty -i \fIprogram\fP < /dev/null > file.out &
+
+.fi
+If a coprocess used the standard I/O library for its input and output:
+.nf
+
+        execl(program, program, (char *)0);
+        
+.fi
+we will not talk to the coprocess across a pipe, because the standard I/O library 
+fully buffered the standard input and standard output, leading to a deadlock. If we
+run the coprocess under \fBtpty\fP:
+.nf
+
+        execl("/usr/bin/tpty", "tpty", "-e", program, (char *)0);
+        
+.fi
+the program now works, even if the coprocess uses standard I/O.
+
+Using the \fBtpty\fP, we can implement the \fBscript(1)\fP program as the following
+shell script:
+.nf
+
+        #!/usr/bin/ksh
+        tpty "${SHELL:-/usr/bin/ksh}" | tee typescript
+        
+.fi
+or
+.nf
+
+        #!/usr/bin/ksh
+        tpty -o typescript "${SHELL:-/usr/bin/ksh}"
+        
+.fi
+
+
+
+Using the \fBtpty\fP, we can "talk" to the interactive programs noninteractively 
+like the \fBexpect(1)\fP.
+The option (\fB\-d\fP) allows \fBtpty\fP to be connected to a driver process for
+its input and output. The standard output of the driver is \fBtpty\fP's standard input and
+vice versa.
+
+\fBtpty\fP provides the option (\fB\-x\fP) for default driver, if use default driver,
+you must specify the config file (\fB\-f\fP). The config file's format like:
+.nf
+
+    ExpectString%SendReply%<TptyReserveWords>
+
+.fi
+The following is an example of an config file:
+.nf
+
+	login: % foo
+	foo's Password: % password
+	foo@host:[/]# % date "+%y%m%d"
+	foo@host:[/]# % exit
+
+.fi
+.PP
+The field separator is \fBthe first\fP '%'. \fBtpty\fP looks for the 
+ExpectString in the interactive program's output,
+inputs the SendReply if the pattern matched. That means:
+.nf
+
+    case Output matched:
+            ExpectString1)
+                    SendReply1; break;
+            ExpectString2)
+                    SendReply2; break;
+            ...
+
+.fi
+
+The config file can use the regular expression, since if the ExpectString
+has symbol '%', you can use '.' to replace it.
+The symbols and subroutines is from \fBregex\fP. You must precede them with a \\ (backslash)
+if you want to match the special symbol itself. For example, \\$ matches a dollar sign.
+.nf
+
+    login: %foo 
+    foo's Password: %password 
+    foo@host:[/]# % shell-cmd 
+    \fB.*\\[.*\\].*% shell-cmd\fP 
+    foo@host:[/]# % exit
+
+.fi
+Note, the pattern match do not ignore the \fBBLANK\fP.
+The TptyReserveWords
+is \fBNONR, REPEAT, INTERACT, ENCRYPT\fP. The 
+.B NONR
+means do not input the newline key (like '\\r').
+The
+.B REPAET
+means:
+.nf
+
+    while (Output matched ExpectString)
+        SendReply;
+
+.fi
+The
+.B INTERACT
+means:
+.nf
+
+    if (Output matched ExpectString)
+            do the rest thing manually;
+
+.fi
+.B INTERACT
+must be used with
+.B \-I
+option.
+
+Here is another sample of a config file:
+.nf
+
+    ogin: %foo
+    assword: %secret
+    .*# % cat LargeFile | more
+    --More--%j% <NONR> % <REPEAT>
+    .*# % <INTERACT>
+
+.fi
+
+The
+.B ENCRYPT
+is added by
+.B tpty-crypt
+automatically, no need add the word manually.
+The
+.B tpty-crypt
+and
+.B tpty-keygen
+are used to encrypt the sensitive fields of the config file.
+You should use
+.B tpty-keygen
+to generate an RSA keypair with a 2048 bit private key
+and extract the public key from the RSA keypair in PEM format:
+.nf
+
+    $ tpty-keygen ./private.pem
+    Generating RSA private key, 2048 bit long modulus
+    .+++
+    ...+++
+    e is 65537 (0x10001)
+    writing RSA key
+    private key : ./private.pem
+    public  key : ./private.pem.pub 
+
+.fi
+Then you can encode the config file with
+.B tpty-crypt
+The syntax is
+.nf
+
+    \fBtpty-crypt\fP FileName SegmentName PublicKey StoreFile
+
+.fi
+The
+.I SegmentName
+is which segment you want to encode, like "password" etc.
+The
+.I StoreFile
+is the file which is used to stored the encrypted segment.
+For example, The original file is
+.nf
+
+    assword: % secret
+    .*# % whoami
+    .*# % exit
+
+.fi
+After executing the following command:
+.nf
+
+    $ tpty-crypt config "assword:" private.pem.pub config.key
+
+.fi 
+The config file will become:
+.nf 
+
+    assword: %<ENCRYPT>
+    .# % whoami
+    .# % exit
+
+.fi
+The encrypted key is stored in config.key.
+
+When the config file is ready, you can execute the following command:
+.nf
+
+        tpty -x -f \fIconfig\fP telnet remote-host
+
+.fi
+
+If the file is encrypted, execute:
+.nf
+
+        tpty -x -f \fIconfig\fP -p private.pem -k config.key telnet remote-host
+
+.fi
+
+Because the 
+.B tpty
+creates a session with a pseudo terminal,
+even you can write the driver program yourself to talk to the pseudo terminal.
+.nf
+
+        tpty -d \fIdriver\fP program [ args ... ]
+
+.fi
+
+.SH OPTIONS
+Valid options are:
+.TP
+\fB\-a\fP \fIauditfile\fP
+File containing all input from stdin, including the stty in noecho mode.
+.TP
+\fB\-d\fP \fIdriver\fP
+Specifies the driver program for stdin/stdout.
+.TP
+\fB\-e\fP
+Does not echo characters for slave pty's line discipline.
+.TP
+\fB\-f\fP \fIconfig\fP
+Specifies the config file for default driver, must use \fB\-f\fP and \fB\-x\fP flags together.
+.TP
+\fB\-i\fP
+Ignore EOF on standard input.
+.TP
+\fB\-k\fP \fIEncryptedKey\fP
+Specifies the file which save the encrypted segment of the config file.
+.TP
+\fB\-n\fP
+No interactive mode.
+.TP
+\fB\-o\fP \fIoutfile\fP
+Designates the file to be used for the program output.
+.TP
+\fB\-p\fP \fIRSAPrivateKey\fP
+Specifies the RSA private key to decrypt the config file.
+.TP
+\fB\-r\fP \fIrecordfile\fP
+Output timing data to \fIrecordfile\fP.
+This data contains two fields, separated by a space.
+The first field indicates how much time elapsed since the previous output.
+The second field indicates how many characters were output this time.
+This information can be used to replay outfile (-o) with realistic typing and output delays.
+.TP
+\fB\-t\fP \fItimeout\fP
+If after timeout, none of interactive program's output have been seen, \fBtpty\fP
+will exit. If you don't specify the \fB-x\fP option,
+the \fBtimeout\fP will be ignored. Default timeout is 10 seconds. If \fBtimeout\fP < 0, will
+wait forever.
+.TP
+\fB\-u\fP
+Unlink the encrypted key file (specified by \fB\-k\fP option).
+.TP
+\fB\-v\fP
+Verbose mode. It only displays the slave pty's device name, not is very helpful for debugging.
+.TP
+\fB\-x\fP
+Choose default driver. Must use \fB\-f\fP and \fB\-x\fP flags together, it will interpret the
+config file, drive interactive programs in noninteractive modes.
+.TP
+\fB\-X\fP
+Redirect output to /dev/null if use the default driver.
+.TP
+\fB\-I\fP
+If you don't want to completely automate a task with a driver
+(\fB\-d\fP or \fB\-x\fP), the \fB\-I\fP option is to automate
+some of it and then do the rest manually.
+For example, if the
+.I config's
+(\fB\-f\fP) content is:
+.nf
+
+        assword: %TopSecret
+        .*# % <INTERACT>
+
+.fi
+When execute:
+.nf
+
+	tpty -I -x -f \fIconfig\fP ssh remote-host
+
+.fi
+Now consider doing this manually.
+
+.SH NOTES
+Certain interactive commands, such as
+\fBvi(1)\fP, create garbage in the outfile (-o).
+.B tpty
+works best with commands that do not manipulate the screen,
+the results are meant to emulate a hardcopy terminal.
+
+.SH Exit Status
+This command returns the following exit values:
+.TP
+\fB0\fP
+Successful completion.
+.TP
+\fB>0\fP
+An error occurred.
+
+.SH BUGS
+If
+.B tpty
+with
+.B -o
+option,
+it will place
+.I everything
+in the output file, including linefeeds and backspaces.  This is not what the
+naive user expects.
+
+.SH HISTORY
+.B tpty
+The prototype of
+.B tpty
+was 
+.B pty
+what was written by W.Richard Stevens for APUE.
+Gong Cun implemented the default driver for interactive programs 
+with other features, was inspired by 
+.B expect(1)
+and GNU/Linux
+.B script(1)
+utility.
+The
+.B tpty
+worked on AIX, GNU/Linux and MacOSX.
+
+.SH SEE ALSO
+expect(1), script(1), tptyreplay(1), tty(1), pty(5), regex(3)
+
+.SH PROBLEMS
+Problems with
+.B tpty
+should be reported to 
+<gongcunjust@gmail.com>
+
