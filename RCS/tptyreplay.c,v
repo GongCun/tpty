@@ -2,7 +2,7 @@ head	1.1;
 access;
 symbols;
 locks
-	gongcunjust:1.1; strict;
+	GongCun:1.1; strict;
 comment	@ * @;
 
 

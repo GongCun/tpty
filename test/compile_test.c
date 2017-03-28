@@ -1,7 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char (*f)() = unlockpt;
+typedef char func(void);
+
+func *f = (func *)unlockpt;
+
+/* char (*f)() = (char (*)(void)) unlockpt; */
 
 int main(void)
 {
@@ -12,6 +16,6 @@ int main(void)
 #endif
 
 	printf("hello world\n");
-	return(f != unlockpt);
+	return(f != (func *)unlockpt);
 
 }

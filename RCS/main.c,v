@@ -1,10 +1,20 @@
-head	1.14;
+head	1.16;
 access;
 symbols;
 locks
-	gongcunjust:1.14; strict;
+	GongCun:1.16; strict;
 comment	@ * @;
 
+
+1.16
+date	2017.03.27.23.25.54;	author GongCun;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	2017.03.27.14.29.01;	author GongCun;	state Exp;
+branches;
+next	1.14;
 
 1.14
 date	2015.05.04.11.27.21;	author gongcunjust;	state Exp;
@@ -100,16 +110,61 @@ match file, but exit code is still 0.
 @
 
 
-1.14
+1.16
 log
-@if (manflg == 0) waitpid(pid, &status, 0);
+@*** empty log message ***
 @
 text
-@#include "tpty.h"
+@/*
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2015,2016,2017 Cun Gong <gong_cun@@bocmacau.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+#include "tpty.h"
 #include <termios.h>
 #include <signal.h>
+#include <setjmp.h>
 
-#define OPTSTR "Ia:r:t:d:f:einvxo:Xp:k:u"
+/*
+ *  -I: interact manually
+ *  -a <auditfile>
+ *  -r: record data for replay
+ *  -t: set expect timeout
+ *  -d <driver>: driver for stdin/stdout
+ *  -c <config>: config file for auto interact
+ *  -e: noecho for slave pty's line discipline
+ *  -i: ignore EOF on standard input
+ *  -n: not interactive
+ *  -v: verbose output
+ *  -x: use default driver
+ *  -o <output>: dump the session to file
+ *  -X: output to /dev/null
+ *  -p <PrivateKey>: RSA private key
+ *  -k <EncryptKey>: RSA encrypted key
+ *  -u: remove key file
+ */
+
+
+#define OPTSTR "Ia:r:t:d:c:einvxo:Xp:k:u"
 #define HELP "usage: tpty [ -x -f config ] [ -t timeout -d driver -einuvXI -o output -r record -a auditfile -p RSAPrivateKey -k EncryptedKey ] program [ args ... ]"
 
 
@@ -117,13 +172,16 @@ static void
 set_noecho(int);		/* at the end of this file */
 
 extern void
-do_driver(int (*f_driver) (void), int);	/* at the file do_driver.c */
+do_driver(int (*f_driver) (void));	/* at the file do_driver.c */
 
 extern void
 loop(int, int);			/* at the file loop.c */
 
 static void
 sig_winch(int);
+
+static void 
+sig_alrm(int);
 
 
 int             fdm;
@@ -145,6 +203,7 @@ int             tty = -1;
 int             rmflg = 0;
 int             status;
 int             ret;
+static sigjmp_buf jmpbuf;
 
 int
 main(int argc, char **argv)
@@ -179,17 +238,21 @@ main(int argc, char **argv)
 		case 'e':	/* noecho for slave pty's line discipline */
 			noecho = 1;
 			break;
-		case 'f':	/* read the config file for driver */
+		case 'c':	/* read the config file for driver */
 			pathconfig = optarg;
 			break;
 		case 'i':	/* ignore EOF on standard input */
 			ignoreeof = 1;
 			break;
 		case 'k':
+#ifdef HAVE_OPENSSL
 			if (optarg && !(keyfd = fopen(optarg, "r")))
 				err_sys("cannot open %s", optarg);
 			encflg = 1;
 			key_name = optarg;
+#else
+			err_quit("The -k option is not supported because can't find the OPENSSL lib.");
+#endif
 			break;
 		case 'n':	/* not interactive */
 			interactive = 0;
@@ -203,8 +266,12 @@ main(int argc, char **argv)
 			oflg = 1;
 			break;
 		case 'p':
+#ifdef HAVE_OPENSSL
 			rsafd = optarg;
 			encflg = 1;
+#else
+			err_quit("The -p option is not supported because can't find the OPENSSL lib.");
+#endif
 			break;
 		case 'r':	/* reacord data for replay */
 			if (optarg && !(timingfd = fopen(optarg, "w")))
@@ -234,7 +301,7 @@ main(int argc, char **argv)
 		case 'X':	/* output to /dev/null */
 			zeroflg = 1;
 			break;
-		case 'I':	/* manually interact */
+		case 'I':	/* interact manually */
 			manflg = 1;
 			break;
 		case '?':
@@ -300,39 +367,40 @@ main(int argc, char **argv)
 		if ((childpid = fork()) < 0) {
 			err_sys("fork error");
 		} else if (childpid == 0) {	/* child */
-			do_driver(def_driver, 0);	/* use do_driver to 
-                                           changes our stdin/stdout */
+			/* use do_driver to changes our stdin/stdout */
+			if (driver)
+				do_driver((int (*)(void))0);
+			else
+				do_driver(def_driver);
 		} else {	/* parent */
-            if (waitpid(childpid, &status, 0) != childpid)
-                err_sys("waitpid");
-            ret = sys_exit(status);
-			if (manflg == 0) {
+			/* wait driver first */
+			if (waitpid(childpid, &status, 0) != childpid)
+				err_sys("waitpid");
+			ret = sys_exit(status);
+			if (manflg == 0) { /* if no need interact mannually, wait and exit */
+				if (signal(SIGALRM, sig_alrm) == SIG_ERR)
+					err_sys("signal SIGALRM error");
+				if (timeout > 0)
+					alarm(timeout);
+				if (sigsetjmp(jmpbuf, 1))
+					err_quit("tpty timed out");
 				if (waitpid(pid, &status, 0) < 0)
 					err_sys("waitpid error");
-				ret += sys_exit(status);
+				alarm(0);
+				ret |= sys_exit(status);
 				exit(ret);
 			}
-
-            switch ( ret ) {
-                case 0:
-                    break;
-                case EXP_TIMEOUT:
-                    err_quit("tpty timed out");
-                    break;
-                case EXP_ERRNO:
-                    err_sys("tpty error");
-                    break;
-                default:
-                    err_quit("tpty failed");
-            }
-			do_driver(inter_driver, 1);	/* open /dev/tty to give
-                                           user keyboard control */
+			if (!ret)
+				err_quit("driver exception: rc=%d\n", ret);
+			/* open /dev/tty to give user keyboard control */
+			do_driver(inter_driver);
 		}
 	}
 	loop(fdm, ignoreeof);	/* copies stdin -> ptym, ptym -> stdout */
 
-    while (waitpid((pid_t)-1, &status, WNOHANG) > 0) /* must be non-block mode */
-        ret += sys_exit(status);
+	while (waitpid((pid_t) - 1, &status, WNOHANG) > 0)	/* must be non-block
+								 * mode */
+		ret |= sys_exit(status);
 
 	exit(ret);
 }
@@ -375,6 +443,113 @@ sig_winch(int signo)
 		err_sys("TIOCSWINSZ, error");
 
 }
+
+static void 
+sig_alrm(int signo)
+{
+	siglongjmp(jmpbuf, 1);	/* jump back to main, and exit */
+}
+@
+
+
+1.15
+log
+@*** empty log message ***
+@
+text
+@d58 1
+a58 1
+do_driver(int (*f_driver) (void), int);	/* at the file do_driver.c */
+d253 5
+a257 3
+			do_driver(def_driver, 0);	/* use do_driver to
+							 * changes our
+							 * stdin/stdout */
+d259 1
+d263 1
+a263 1
+			if (manflg == 0) {
+d273 1
+a273 1
+				ret += sys_exit(status);
+d276 4
+a279 14
+			switch (ret) {
+			case 0:
+				break;
+			case EXP_TIMEOUT:
+				err_quit("tpty timed out");
+				break;
+			case EXP_ERRNO:
+				err_sys("tpty error");
+				break;
+			default:
+				err_quit("tpty failed");
+			}
+			do_driver(inter_driver, 1);	/* open /dev/tty to give
+							 * user keyboard control */
+d286 1
+a286 1
+		ret += sys_exit(status);
+@
+
+
+1.14
+log
+@if (manflg == 0) waitpid(pid, &status, 0);
+@
+text
+@d1 24
+d28 1
+d30 21
+a50 1
+#define OPTSTR "Ia:r:t:d:f:einvxo:Xp:k:u"
+d66 3
+d89 1
+d124 1
+a124 1
+		case 'f':	/* read the config file for driver */
+d131 1
+d136 3
+d152 1
+d155 3
+d187 1
+a187 1
+		case 'I':	/* manually interact */
+d253 3
+a255 2
+			do_driver(def_driver, 0);	/* use do_driver to 
+                                           changes our stdin/stdout */
+d257 3
+a259 3
+            if (waitpid(childpid, &status, 0) != childpid)
+                err_sys("waitpid");
+            ret = sys_exit(status);
+d261 6
+d269 1
+d273 12
+a284 13
+
+            switch ( ret ) {
+                case 0:
+                    break;
+                case EXP_TIMEOUT:
+                    err_quit("tpty timed out");
+                    break;
+                case EXP_ERRNO:
+                    err_sys("tpty error");
+                    break;
+                default:
+                    err_quit("tpty failed");
+            }
+d286 1
+a286 1
+                                           user keyboard control */
+d291 3
+a293 2
+    while (waitpid((pid_t)-1, &status, WNOHANG) > 0) /* must be non-block mode */
+        ret += sys_exit(status);
+d336 6
 @
 
 

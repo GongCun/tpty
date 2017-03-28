@@ -27,19 +27,21 @@ else
 	echo '/* #undef HAVE_OPENSSL */' >$HEADER
 fi
 
-for func in unlockpt posix_openpt ptsname grantpt
+for func in unlockpt posix_openpt ptsname grantpt nanosleep
 do
 cat >${TEMPC} <<!
 #include <stdlib.h>
 #include <fcntl.h>
-char (*f)() = $func;
-int main(void) { return(f != $func); }
+#include <time.h>
+typedef char func(void);
+func *f = (func *)$func;
+int main(void) { return(f != (func *)$func); }
 !
 {
 if $CC -o ${TEMPC%.c}.out ${TEMPC} >/dev/null 2>&1; then
 echo "#define "`echo HAVE_${func} 1 | tr 'a-z' 'A-Z'`
 else
-echo "/* #undef "`echo HAVE_${func} 1 | tr 'a-z' 'A-Z'`" */"
+echo "/* #undef "`echo HAVE_${func} | tr 'a-z' 'A-Z'`" */"
 fi
 } >>$HEADER
 done

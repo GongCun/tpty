@@ -55,7 +55,7 @@ static void
 set_noecho(int);		/* at the end of this file */
 
 extern void
-do_driver(int (*f_driver) (void), int);	/* at the file do_driver.c */
+do_driver(int (*f_driver) (void));	/* at the file do_driver.c */
 
 extern void
 loop(int, int);			/* at the file loop.c */
@@ -250,14 +250,17 @@ main(int argc, char **argv)
 		if ((childpid = fork()) < 0) {
 			err_sys("fork error");
 		} else if (childpid == 0) {	/* child */
-			do_driver(def_driver, 0);	/* use do_driver to
-							 * changes our
-							 * stdin/stdout */
+			/* use do_driver to changes our stdin/stdout */
+			if (driver)
+				do_driver((int (*)(void))0);
+			else
+				do_driver(def_driver);
 		} else {	/* parent */
+			/* wait driver first */
 			if (waitpid(childpid, &status, 0) != childpid)
 				err_sys("waitpid");
 			ret = sys_exit(status);
-			if (manflg == 0) {
+			if (manflg == 0) { /* if no need interact mannually, wait and exit */
 				if (signal(SIGALRM, sig_alrm) == SIG_ERR)
 					err_sys("signal SIGALRM error");
 				if (timeout > 0)
@@ -267,30 +270,20 @@ main(int argc, char **argv)
 				if (waitpid(pid, &status, 0) < 0)
 					err_sys("waitpid error");
 				alarm(0);
-				ret += sys_exit(status);
+				ret |= sys_exit(status);
 				exit(ret);
 			}
-			switch (ret) {
-			case 0:
-				break;
-			case EXP_TIMEOUT:
-				err_quit("tpty timed out");
-				break;
-			case EXP_ERRNO:
-				err_sys("tpty error");
-				break;
-			default:
-				err_quit("tpty failed");
-			}
-			do_driver(inter_driver, 1);	/* open /dev/tty to give
-							 * user keyboard control */
+			if (!ret)
+				err_quit("driver exception: rc=%d\n", ret);
+			/* open /dev/tty to give user keyboard control */
+			do_driver(inter_driver);
 		}
 	}
 	loop(fdm, ignoreeof);	/* copies stdin -> ptym, ptym -> stdout */
 
 	while (waitpid((pid_t) - 1, &status, WNOHANG) > 0)	/* must be non-block
 								 * mode */
-		ret += sys_exit(status);
+		ret |= sys_exit(status);
 
 	exit(ret);
 }
