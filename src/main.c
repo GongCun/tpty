@@ -210,19 +210,22 @@ main(int argc, char **argv)
 			err_sys("unlink error");
 
 	if (interactive) {	/* fetch current termios and window size */
-		snprintf(buf, sizeof(buf), "TPTY started on %s\n", gettime());
+		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
+			err_sys("TIOCGWINSZ error");
+		snprintf(buf, sizeof(buf), "TPTY started on %s (%d rows, %d columns)\n",
+				gettime(), size.ws_row, size.ws_col);
+#define __BUFLEN strlen(buf)
 		if (!zeroflg) {
-			if (writen(STDERR_FILENO, buf, strlen(buf)) != strlen(buf))
+			if (writen(STDERR_FILENO, buf, __BUFLEN) != __BUFLEN)
 				err_sys("writen() error");
 		}
 		if (outputfd >= 0) {
-			if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
+			if (writen(outputfd, buf, __BUFLEN) != __BUFLEN)
 				err_sys("writen() error");
 		}
+#undef __BUFLEN
 		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
 			err_sys("tcgetattr error on stdin");
-		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
-			err_sys("TIOCGWINSZ error");
 		pid = pty_fork(&fdm, slave_name, sizeof(slave_name),
 			       &orig_termios, &size);
 	} else {
@@ -304,10 +307,15 @@ main(int argc, char **argv)
 				if (writen(STDERR_FILENO, buf, strlen(buf)) != strlen(buf))
 					err_sys("writen() error");
 			}
+
+			/* don't write exit message into output file,
+ 			 * otherwise tptyreplay will have exception */
+#if 0
 			if (outputfd >= 0) {
 				if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
 					err_sys("writen() error");
 			}
+#endif
 		}
 	}
 

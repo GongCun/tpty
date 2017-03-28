@@ -1,10 +1,20 @@
-head	1.16;
+head	1.18;
 access;
 symbols;
 locks
-	GongCun:1.16; strict;
+	GongCun:1.18; strict;
 comment	@ * @;
 
+
+1.18
+date	2017.03.28.22.32.02;	author GongCun;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	2017.03.28.21.47.02;	author GongCun;	state Exp;
+branches;
+next	1.16;
 
 1.16
 date	2017.03.27.23.25.54;	author GongCun;	state Exp;
@@ -110,7 +120,7 @@ match file, but exit code is still 0.
 @
 
 
-1.16
+1.18
 log
 @*** empty log message ***
 @
@@ -187,7 +197,7 @@ sig_alrm(int);
 int             fdm;
 char           *pathconfig;
 char           *driver;
-int             outputfd;
+int             outputfd = -1;
 FILE           *timingfd;
 int             timeout = 10;	/* default 10 seconds */
 int             tflg;
@@ -203,18 +213,20 @@ int             tty = -1;
 int             rmflg = 0;
 int             status;
 int             ret;
+int		interactive;
 static sigjmp_buf jmpbuf;
 
 int
 main(int argc, char **argv)
 {
-	int             c, ignoreeof, interactive, noecho, verbose, defdriver;
-	pid_t           pid, childpid;
+	int             c, ignoreeof, noecho, verbose, defdriver;
+	pid_t           pid, childpid = 0;
 	char            slave_name[20];
 	struct termios  orig_termios;
 	struct winsize  size;
 	int             fd;
 	char           *key_name;
+	char		buf[MAXLINE];
 
 	umask(0);
 	interactive = isatty(STDIN_FILENO);
@@ -325,10 +337,22 @@ main(int argc, char **argv)
 			err_sys("unlink error");
 
 	if (interactive) {	/* fetch current termios and window size */
-		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
-			err_sys("tcgetattr error on stdin");
 		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
 			err_sys("TIOCGWINSZ error");
+		snprintf(buf, sizeof(buf), "TPTY started on %s (%d rows, %d columns)\n",
+				gettime(), size.ws_row, size.ws_col);
+#define __BUFLEN strlen(buf)
+		if (!zeroflg) {
+			if (writen(STDERR_FILENO, buf, __BUFLEN) != __BUFLEN)
+				err_sys("writen() error");
+		}
+		if (outputfd >= 0) {
+			if (writen(outputfd, buf, __BUFLEN) != __BUFLEN)
+				err_sys("writen() error");
+		}
+#undef __BUFLEN
+		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
+			err_sys("tcgetattr error on stdin");
 		pid = pty_fork(&fdm, slave_name, sizeof(slave_name),
 			       &orig_termios, &size);
 	} else {
@@ -402,6 +426,26 @@ main(int argc, char **argv)
 								 * mode */
 		ret |= sys_exit(status);
 
+	if (childpid != getpid()) { /* parent process exit */
+		if (interactive) {
+			snprintf(buf, sizeof(buf), "TPTY done on %s\n", gettime());
+			if (!zeroflg) {
+				tty_atexit();
+				if (writen(STDERR_FILENO, buf, strlen(buf)) != strlen(buf))
+					err_sys("writen() error");
+			}
+
+			/* don't write exit message into output file,
+ 			 * otherwise tptyreplay will have exception */
+#if 0
+			if (outputfd >= 0) {
+				if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
+					err_sys("writen() error");
+			}
+#endif
+		}
+	}
+
 	exit(ret);
 }
 
@@ -449,6 +493,50 @@ sig_alrm(int signo)
 {
 	siglongjmp(jmpbuf, 1);	/* jump back to main, and exit */
 }
+
+@
+
+
+1.17
+log
+@*** empty log message ***
+@
+text
+@d213 5
+a217 1
+		snprintf(buf, sizeof(buf), "TPTY started on %s\n", gettime());
+d219 1
+a219 1
+			if (writen(STDERR_FILENO, buf, strlen(buf)) != strlen(buf))
+d223 1
+a223 1
+			if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
+d226 1
+a228 2
+		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
+			err_sys("TIOCGWINSZ error");
+d310 4
+d318 1
+@
+
+
+1.16
+log
+@*** empty log message ***
+@
+text
+@d73 1
+a73 1
+int             outputfd;
+d89 1
+d95 2
+a96 2
+	int             c, ignoreeof, interactive, noecho, verbose, defdriver;
+	pid_t           pid, childpid;
+d102 1
+d213 9
+d299 15
+d361 1
 @
 
 

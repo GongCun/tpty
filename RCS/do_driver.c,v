@@ -1,10 +1,15 @@
-head	1.9;
+head	1.10;
 access;
 symbols;
 locks
-	GongCun:1.9; strict;
+	GongCun:1.10; strict;
 comment	@ * @;
 
+
+1.10
+date	2017.03.28.21.47.02;	author GongCun;	state Exp;
+branches;
+next	1.9;
 
 1.9
 date	2017.03.27.14.29.01;	author GongCun;	state Exp;
@@ -62,7 +67,7 @@ desc
 @@
 
 
-1.9
+1.10
 log
 @*** empty log message ***
 @
@@ -133,6 +138,7 @@ void do_driver (int (*f_driver)(void))
 		}
 	}
 	close(pipe[0]);		/* parent */
+	/* leave stderr for parent alone */
 	if (dup2(pipe[1], STDIN_FILENO) != STDIN_FILENO)
 		err_sys("dup2 error to stdin");
 	if (dup2(pipe[1], STDOUT_FILENO) != STDOUT_FILENO)
@@ -144,6 +150,15 @@ void do_driver (int (*f_driver)(void))
 	 * parent returns, but with stdin and stdout connected to the driver.
 	 */
 }
+@
+
+
+1.9
+log
+@*** empty log message ***
+@
+text
+@d67 1
 @
 
 
