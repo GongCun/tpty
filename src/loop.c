@@ -96,7 +96,8 @@ loop(int ptym, int ignoreeof)
 					nleft = nread;
 					ptr = buf;
 					while (nleft > 0) {
-						for (i = 0; i < nleft && (*(ptr + i) & 255) != 015; i++);
+						for (i = 0; i < nleft && (*(ptr + i) & 255) != 015; i++)
+							;
 						if (writen(fileno(auditfd), ptr, i) != i)	/* don't include CR */
 							err_sys("writen() error");
 						ptr += i;

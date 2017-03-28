@@ -11,8 +11,6 @@ int main(void)
             strlen(plain_text) + 1,
             public_key,
             encrypted);
-    if (encrypted_length < 0)
-        err_ssl();
     printf("Encrypted: %s\n", encrypted);
     printf("Length = %d\n", encrypted_length);
     /* encrypted[encrypted_length] = '\0'; */

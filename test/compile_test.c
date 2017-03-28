@@ -9,10 +9,12 @@ func *f = (func *)unlockpt;
 
 int main(void)
 {
+#if 0
 #ifdef _X_
 	/* nothing to do */
 #else
 #error "exit"
+#endif
 #endif
 
 	int i, j;

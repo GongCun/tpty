@@ -54,6 +54,11 @@
 #define EXP_TIMEOUT 1
 #define EXP_ERRNO 2
 
+#undef err_line
+#define err_line() \
+	((void)fprintf(stderr, ">> %s:%u <<\n", __FILE__, __LINE__), \
+	 fflush(stderr))
+
 typedef void
 Sigfunc(int);
 

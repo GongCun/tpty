@@ -16,8 +16,6 @@ int main(void)
             len,
             private_key,
             decrypted);
-    if (decrypted_length < 0)
-        err_ssl();
     printf("Decrypted Text = %s\n",decrypted);
     printf("Length = %d\n", decrypted_length);
 

@@ -236,6 +236,8 @@ start:
 				if (errno != EIO)
 					err_sys("writen error");
 		}
+	} else { /* timed out */
+		return DRIVER_TIMEDOUT;
 	}
 	return cc;
 }

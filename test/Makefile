@@ -6,7 +6,7 @@ CFLAGS += -D$(PLATFORM)
 
 PROGS =	sig_test time_test fscanf_test strlen_test atoi_test struct_test \
 	char_test getc_test wait_test child_test str_test fdebug_test \
-	regex_test fread_test sig_test02
+	regex_test fread_test sig_test02 err_test compile_test
 
 ifneq (,$(findstring -lcrypto,$(EXTRALIBS)))
 	PROGS := $(PROGS) rsa_test rsa_test2
@@ -61,13 +61,16 @@ rsa_test2: rsa_test2.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o rsa_test2 rsa_test2.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
 fread_test: fread_test.o $(LIBTPTY)
-	$(CC) $(CFLAGS) -o fread_t fread_t.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
+	$(CC) $(CFLAGS) -o $@ fread_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
 sig_test02: sig_test02.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o sig_test02 sig_test02.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
 compile_test: compile_test.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o $@ compile_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
+
+err_test: err_test.o $(LIBTPTY)
+	$(CC) $(CFLAGS) -o $@ err_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
 clean:
 	rm -f $(PROGS) $(TEMPFILES) *.o a.out tpty*

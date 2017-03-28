@@ -18,18 +18,18 @@ all:	$(PROGS)
 
 tpty:	main.o loop.o do_driver.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LDFLAGS) $(LDLIBS)
-	@cp -p tpty ../bin
-	@cp -p tpty ../dbg
+	@cp -p $@ ../bin
+	@(cd ../dbg; ln -sf ../bin/$@ .)
 
 tptyreplay: tptyreplay.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LDFLAGS) $(LDLIBS)
-	@cp -p tptyreplay ../bin
-	@cp -p tptyreplay ../dbg
+	@cp -p $@ ../bin
+	@(cd ../dbg; ln -sf ../bin/$@ .)
 
 tpty-crypt: tpty-crypt.o
 	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LDFLAGS) $(LDLIBS)
-	@cp -p tpty-crypt ../bin
-	@cp -p tpty-crypt ../dbg
+	@cp -p $@ ../bin
+	@(cd ../dbg; ln -sf ../bin/$@ .)
 
 clean:
 	rm -f $(PROGS) $(TEMPFILES) *.o

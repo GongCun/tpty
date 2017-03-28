@@ -29,6 +29,9 @@ writen(int fd, void *ptr, size_t n)
 	size_t		nleft;
 	ssize_t		nwritten;
 
+	if (n == 0)
+		return(0);
+
 	nleft = n;
 	while (nleft > 0) {
 		if ((nwritten = write(fd, ptr, nleft)) < 0) {

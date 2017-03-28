@@ -105,7 +105,7 @@ err_doit(int errnoflag, int error, const char *fmt, va_list ap)
 		snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, ": %s",
 			 strerror(error));
 	}
-#ifdef DEBUG
+#if 0
 	snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, " @%s #%d (%s)",
 			__FILE__, __LINE__, __TIME__);
 #endif
