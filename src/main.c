@@ -70,7 +70,7 @@ sig_alrm(int);
 int             fdm;
 char           *pathconfig;
 char           *driver;
-int             outputfd;
+int             outputfd = -1;
 FILE           *timingfd;
 int             timeout = 10;	/* default 10 seconds */
 int             tflg;
@@ -86,18 +86,20 @@ int             tty = -1;
 int             rmflg = 0;
 int             status;
 int             ret;
+int		interactive;
 static sigjmp_buf jmpbuf;
 
 int
 main(int argc, char **argv)
 {
-	int             c, ignoreeof, interactive, noecho, verbose, defdriver;
-	pid_t           pid, childpid;
+	int             c, ignoreeof, noecho, verbose, defdriver;
+	pid_t           pid, childpid = 0;
 	char            slave_name[20];
 	struct termios  orig_termios;
 	struct winsize  size;
 	int             fd;
 	char           *key_name;
+	char		buf[MAXLINE];
 
 	umask(0);
 	interactive = isatty(STDIN_FILENO);
@@ -208,6 +210,15 @@ main(int argc, char **argv)
 			err_sys("unlink error");
 
 	if (interactive) {	/* fetch current termios and window size */
+		snprintf(buf, sizeof(buf), "TPTY started on %s\n", gettime());
+		if (!zeroflg) {
+			if (writen(STDERR_FILENO, buf, strlen(buf)) != strlen(buf))
+				err_sys("writen() error");
+		}
+		if (outputfd >= 0) {
+			if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
+				err_sys("writen() error");
+		}
 		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
 			err_sys("tcgetattr error on stdin");
 		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
@@ -285,6 +296,21 @@ main(int argc, char **argv)
 								 * mode */
 		ret |= sys_exit(status);
 
+	if (childpid != getpid()) { /* parent process exit */
+		if (interactive) {
+			snprintf(buf, sizeof(buf), "TPTY done on %s\n", gettime());
+			if (!zeroflg) {
+				tty_atexit();
+				if (writen(STDERR_FILENO, buf, strlen(buf)) != strlen(buf))
+					err_sys("writen() error");
+			}
+			if (outputfd >= 0) {
+				if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
+					err_sys("writen() error");
+			}
+		}
+	}
+
 	exit(ret);
 }
 
@@ -332,3 +358,4 @@ sig_alrm(int signo)
 {
 	siglongjmp(jmpbuf, 1);	/* jump back to main, and exit */
 }
+

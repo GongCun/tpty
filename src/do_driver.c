@@ -64,6 +64,7 @@ void do_driver (int (*f_driver)(void))
 		}
 	}
 	close(pipe[0]);		/* parent */
+	/* leave stderr for parent alone */
 	if (dup2(pipe[1], STDIN_FILENO) != STDIN_FILENO)
 		err_sys("dup2 error to stdin");
 	if (dup2(pipe[1], STDOUT_FILENO) != STDOUT_FILENO)

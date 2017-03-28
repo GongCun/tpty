@@ -99,7 +99,7 @@ loop(int ptym, int ignoreeof)
 						for (i = 0; i < nleft && (*(ptr + i) & 255) != 015; i++)
 							;
 						if (writen(fileno(auditfd), ptr, i) != i)	/* don't include CR */
-							err_sys("writen() error");
+							err_sys("writen() AuditFile error");
 						ptr += i;
 						nleft -= i;
 						if (nleft > 0 && (*ptr & 255) == 015) {	/* bypass CR */
