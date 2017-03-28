@@ -11,7 +11,7 @@ CFLAGS += -D$(PLATFORM)
 
 LIB_NAME = libtpty.a
 LIB_OBJS = readn.o writen.o s_pipe.o signal_rest.o signal_intr.o tty_noncanon.o \
-	   error.o pty_fork.o pty_open.o strregex.o def_driver.o \
+	   error.o pty_fork.o pty_open.o strregex.o def_driver.o gettime.o\
 	   set_fl.o clr_fl.o lockreg.o locktest.o sys_exit.o fdebug.o inter_driver.o
 
 ifneq (,$(findstring -lcrypto,$(EXTRALIBS)))

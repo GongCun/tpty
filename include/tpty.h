@@ -147,6 +147,7 @@ int
 sys_exit(int status);
 void
 fdebug(FILE *, const char *,...);
+char *gettime(void);
 
 #ifdef HAVE_OPENSSL
 RSA            *
