@@ -105,6 +105,10 @@ err_doit(int errnoflag, int error, const char *fmt, va_list ap)
 		snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, ": %s",
 			 strerror(error));
 	}
+#ifdef DEBUG
+	snprintf(buf + strlen(buf), MAXLINE - strlen(buf) - 1, " @%s #%d (%s)",
+			__FILE__, __LINE__, __TIME__);
+#endif
 	strcat(buf, "\n");
 	fflush(stdout);		/* incase the stdout and stderr are the same */
 	fputs(buf, stderr);

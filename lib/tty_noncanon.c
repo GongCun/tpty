@@ -39,6 +39,7 @@ int
 tty_cbreak(int fd)
 {				/* put terminal into a cbreak mode */
 	struct termios  buf;
+	int err;
 
 	if (tcgetattr(fd, &save_termios) < 0)
 		return (-1);
@@ -78,6 +79,7 @@ int
 tty_raw(int fd)
 {
 	struct termios  buf;
+	int err;
 
 	if (tcgetattr(fd, &save_termios) < 0)
 		return (-1);
@@ -128,7 +130,7 @@ tty_raw(int fd)
 	}
 	if ((buf.c_lflag & (ECHO | ICANON | IEXTEN | ISIG)) ||
 			(buf.c_iflag & (BRKINT | ICRNL | INPCK | ISTRIP | IXON)) ||
-			(buf.c_cflag & (CSIZE | PARENB | CS8) != CS8) ||
+			((buf.c_cflag & (CSIZE | PARENB | CS8)) != CS8) ||
 			(buf.c_oflag & OPOST) || buf.c_cc[VMIN] != 1 ||
 			buf.c_cc[VTIME] != 0)
 	{

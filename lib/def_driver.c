@@ -265,7 +265,7 @@ fp2f(FILE * fp, int *p)
 		strncpy(exp_list[i].prompt, buf, BUFSIZ);
 		exp_list[i].prompt[BUFSIZ - 1] = '\0'; /* if not terminated with a null byte */
 
-		bzero(exp_list[i].cmd, sizeof exp_list[i].cmd);
+		memset(exp_list[i].cmd, 0, sizeof exp_list[i].cmd);
 		while ((ptr = strtok(NULL, DELIM)) != NULL) {
 			if (strlen(ptr) > BUFSIZ - 3 - strlen(exp_list[i].cmd))	/* '%' + '\r' + null = 3 */
 				err_quit("cmd string out of buff: line %d.", i + 1);
