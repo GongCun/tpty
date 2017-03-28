@@ -15,6 +15,9 @@ int main(void)
 #error "exit"
 #endif
 
+	int i, j;
+	({i=1; j=2;});
+	printf("i = %d, j = %d\n", i, j);
 	printf("hello world\n");
 	return(f != (func *)unlockpt);
 

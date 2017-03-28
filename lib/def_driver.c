@@ -1,18 +1,44 @@
+/*
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2015,2016,2017 Cun Gong <gong_cun@bocmacau.com>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
 #include "tpty.h"
 #include <signal.h>
 #include <setjmp.h>
 
-static struct f {
-	int             disable;
-	int             repeat;
-	int             nocr;	/* no carriage return */
-	char            prompt[BUFSIZ];
-	char            cmd[BUFSIZ];
+enum { DRIVER_EOF = -1, DRIVER_ERROR = -2, DRIVER_TIMEDOUT = -3 };
+
+static struct exp {
+	int             matched;	/* have matched or not		*/
+	int             repeat;		/* repeat this command ?	*/
+	int             nocr;		/* no carriage return		*/
+	char            prompt[BUFSIZ];	/* prompt or match string	*/
+	char            cmd[BUFSIZ];	/* run cmd when prompt matched	*/
 }               exp_list[EXP_FULL];
 
 int             i_read_errno;
 
-FILE *fdbg;
+FILE           *fdbg;
 
 static int
 match_readin(char *, char *);
@@ -23,18 +49,20 @@ i_read(int, int, char *, int);
 static void
 fp2f(FILE * fp, int *p);
 
-static int rm_nulls(char *s, int c)
+static int 
+rm_nulls(char *s, int c)
 {
-	char *s2 = s;
-	int count = 0;
-	int i;
+	char           *s2 = s;
+	int             count = 0;
+	int             i;
 
 	for (i = 0; i < c; i++, s++) {
 		if (*s == 0) {
 			count++;
 			continue;
 		}
-		if (count) *s2 = *s;
+		if (count)
+			*s2 = *s;
 		s2++;
 	}
 	return count;
@@ -51,7 +79,7 @@ def_driver(void)
 	int             len, return_val = EXP_ERRNO;
 	int             ret, buf_len, readin_len, old_len;
 	char           *readin_end, *match_end;
-#define return_def_driver(x) {return_val = x; goto cleanup;}
+#define return_def_driver(x) ({return_val = x; goto cleanup;})
 #ifdef DEBUG
 	fdbg = fopen("./dbg.out", "w");
 	if (fdbg == NULL)
@@ -89,15 +117,15 @@ def_driver(void)
 	for (;;) {
 		cc = i_read(tty, timeout, readin_end, readin_len - 1 - buf_len);
 
-		if (cc == EOF)
+		if (cc == DRIVER_EOF)
 			return_def_driver(EXP_EOF);
-		if (cc == -2) {
+		if (cc == DRIVER_ERROR) {
 			if (i_read_errno == EIO)
 				return_def_driver(EXP_EOF);
 			errno = i_read_errno;
 			return_def_driver(EXP_ERRNO);
 		}
-		if (cc == -3)
+		if (cc == DRIVER_TIMEDOUT)
 			return_def_driver(EXP_TIMEOUT);
 
 		old_len = buf_len;
@@ -111,7 +139,7 @@ def_driver(void)
 #endif
 
 		for (i = 0; i < n; i++) {
-			if (!exp_list[i].disable &&
+			if (!exp_list[i].matched &&
 			 (ret = match_readin(readin, exp_list[i].prompt))) {
 				match_end = readin + ret;
 				buf_len = readin_end - match_end;
@@ -119,9 +147,15 @@ def_driver(void)
 				readin_end = readin + buf_len;
 
 				if (!exp_list[i].repeat)
-					exp_list[i].disable = 1;
-				if (strstr(exp_list[i].cmd, "<INTERACT>") != NULL && manflg)
-					return_def_driver(EXP_EOF);
+					exp_list[i].matched = 1;
+				if (strstr(exp_list[i].cmd, "<INTERACT>") != NULL) {
+				       	if(manflg)
+						return_def_driver(EXP_EOF);
+					else {
+						err_msg("Illegal keyword <INTERACT>, please use -I option");
+						return_def_driver(EXP_ERRNO);
+					}
+				}
 				len = strlen(exp_list[i].cmd);
 				if (writen(STDOUT_FILENO, exp_list[i].cmd, len) != len)
 					if (errno != EPIPE && errno != EIO)
@@ -183,17 +217,17 @@ start:
 		if (errno == EINTR)
 			goto start;
 		i_read_errno = errno;
-		return -2;
+		return DRIVER_ERROR;
 	}
 	if (ret == 0) {		/* timeout */
-		return -3;
+		return DRIVER_TIMEDOUT;
 	}
 	if (FD_ISSET(STDIN_FILENO, &rset)) {
 		cc = read(STDIN_FILENO, buf, buf_size);
 		if (cc < 0)
 			err_sys("read error");
 		if (cc == 0)
-			return EOF;	/* EOF == -1 */
+			return DRIVER_EOF;
 		if (cc > 0) {
 #ifdef DEBUG
 			fdebug(fdbg, "\nbuf = <<%s>>\n", buf);
@@ -210,14 +244,14 @@ static void
 fp2f(FILE * fp, int *p)
 {
 	char           *buf, *ptr, ch;
-	int             i, loop, len, offset;
+	int             i, field, len, offset;
 	char            encrypted[4098];
 
 	buf = malloc(2 * BUFSIZ);
 	if (buf == NULL)
 		err_sys("malloc failed");
-	for (i = 0;; i++) {
-		loop = 0;
+	for (i = 0; ; i++) {
+		field = 0;
 		if (i >= EXP_FULL)
 			err_quit("lines out of scope");
 		if (fgets(buf, 2 * BUFSIZ, fp) == NULL) {
@@ -227,11 +261,9 @@ fp2f(FILE * fp, int *p)
 				err_sys("fgets error");
 		}
 		if (strtok(buf, DELIM) == NULL)
-			err_quit("format error: line %d.", i + 1);
-		if (strlen(buf) > BUFSIZ - 1)
-			err_quit("prompt string out of buffer: line %d.", i + 1);
-		strcpy(exp_list[i].prompt, buf);
-		exp_list[i].prompt[BUFSIZ - 1] = '\0';
+			err_quit("format error (no field separator %%): line %d.", i + 1);
+		strncpy(exp_list[i].prompt, buf, BUFSIZ);
+		exp_list[i].prompt[BUFSIZ - 1] = '\0'; /* if not terminated with a null byte */
 
 		bzero(exp_list[i].cmd, sizeof exp_list[i].cmd);
 		while ((ptr = strtok(NULL, DELIM)) != NULL) {
@@ -252,11 +284,11 @@ fp2f(FILE * fp, int *p)
 					err_sys("fread encrypted string error");
 				private_decrypt(encrypted, len, rsafd, exp_list[i].cmd);
 			} else {
-				if (loop != 0)
+				if (field)
 					strcat(exp_list[i].cmd, "%");
 				strcat(exp_list[i].cmd, ptr);
 			}
-			loop++;
+			field++;
 		}
 
 		if (strlen(exp_list[i].cmd) == 0) {

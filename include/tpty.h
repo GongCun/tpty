@@ -40,6 +40,9 @@
 #include <openssl/err.h>
 #endif
 
+#ifndef BUFSIZ
+#define BUFSIZ 4096
+#endif
 #define MAXLINE 8192
 #define EXP_FULL 64
 #define FILE_MODE (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)	/* -rw-r--r-- */
@@ -149,8 +152,6 @@ public_encrypt(char *, int, char *, char *);
 int
 private_decrypt(char *, int, char *, char *);
 
-void 
-err_ssl(void);
 #endif /* OpenSSL functions */
 
 #endif
