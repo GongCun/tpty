@@ -1,9 +1,9 @@
 #include "tpty.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    FILE *fp = fopen("./encrypt.txt", "r");
-    char private_key[] = "./private.pem";
+    FILE *fp = fopen(argv[1], "r");
+    char *private_key = argv[2];
     char encrypted[4098];
     char decrypted[4098];
     int len;
@@ -16,7 +16,7 @@ int main(void)
             len,
             private_key,
             decrypted);
-    printf("Decrypted Text = %s\n",decrypted);
+    printf("Decrypted Text = %s\n", decrypted);
     printf("Length = %d\n", decrypted_length);
 
     return 0;

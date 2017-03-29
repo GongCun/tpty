@@ -10,7 +10,7 @@ PROGS =	sig_test time_test fscanf_test strlen_test atoi_test struct_test \
 	lock_test delim_test
 
 ifneq (,$(findstring -lcrypto,$(EXTRALIBS)))
-	PROGS := $(PROGS) rsa_test rsa_test2
+	PROGS := $(PROGS) encrypt_test decrypt_test
 endif
 
 
@@ -55,11 +55,11 @@ fdebug_test: fdebug_test.o $(LIBTPTY)
 regex_test: regex_test.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o regex_test regex_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
-rsa_test: rsa_test.o $(LIBTPTY)
-	$(CC) $(CFLAGS) -o rsa_test rsa_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
+encrypt_test: encrypt_test.o $(LIBTPTY)
+	$(CC) $(CFLAGS) -o $@ encrypt_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
-rsa_test2: rsa_test2.o $(LIBTPTY)
-	$(CC) $(CFLAGS) -o rsa_test2 rsa_test2.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
+decrypt_test: decrypt_test.o $(LIBTPTY)
+	$(CC) $(CFLAGS) -o $@ decrypt_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
 fread_test: fread_test.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o $@ fread_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)

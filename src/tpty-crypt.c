@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 
 	if ((fp = fopen(argv[1], "r+")) == NULL)
 		err_sys("fopen error");
-	if ((sfp = fopen(argv[4], "a+")) == NULL)
+	if ((sfp = fopen(argv[4], "w")) == NULL)
 		err_sys("fopen error");
 	/* store the temporary file that replaced the password to <ENCRYPT> */
 	if ((tfp = tmpfile()) == NULL)

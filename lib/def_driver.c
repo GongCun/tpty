@@ -263,7 +263,12 @@ fp2f(FILE * fp, int *p)
 				err_sys("fgets error");
 		}
 		if (buf[0] == ';' && buf[1] == ';') /* ';;' is comment */
+		{
+#ifdef DEBUG
+			fprintf(stderr, "bypass the comment at line %d\n", i+1);
+#endif
 			continue;
+		}
 		if (strtok(buf, DELIM) == NULL)
 			err_quit("format error (no field separator %%): line %d.", i + 1);
 		strncpy(exp_list[i].prompt, buf, BUFSIZ);

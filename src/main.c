@@ -209,21 +209,20 @@ main(int argc, char **argv)
 		if (unlink(key_name) < 0)
 			err_sys("unlink error");
 
+#undef __BUFLEN
+#define __BUFLEN strlen(buf)
+	snprintf(buf, sizeof(buf), "TPTY started on %s\n", gettime());
+
 	if (interactive) {	/* fetch current termios and window size */
 		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
 			err_sys("TIOCGWINSZ error");
-		snprintf(buf, sizeof(buf), "TPTY started on %s (%d rows, %d columns)\n",
-				gettime(), size.ws_row, size.ws_col);
-#define __BUFLEN strlen(buf)
+		buf[__BUFLEN-1] = '\0'; /* delete '\n' */
+		snprintf(buf + __BUFLEN, sizeof(buf) - __BUFLEN, " (%d rows, %d columns)\n",
+				size.ws_row, size.ws_col);
 		if (!zeroflg) {
 			if (writen(STDERR_FILENO, buf, __BUFLEN) != __BUFLEN)
 				err_sys("writen() error");
 		}
-		if (outputfd >= 0) {
-			if (writen(outputfd, buf, __BUFLEN) != __BUFLEN)
-				err_sys("writen() error");
-		}
-#undef __BUFLEN
 		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
 			err_sys("tcgetattr error on stdin");
 		pid = pty_fork(&fdm, slave_name, sizeof(slave_name),
@@ -242,6 +241,11 @@ main(int argc, char **argv)
 			err_sys("can't execute: %s", argv[optind]);
 	}
 	/* parent continue... */
+	if (outputfd >= 0) {
+		if (writen(outputfd, buf, __BUFLEN) != __BUFLEN)
+			err_sys("writen() error");
+	}
+
 	tty = dup(fileno(stdout));	/* save the original stdout */
 	if (tty < 0)
 		err_sys("dup stdout error");

@@ -1,19 +1,17 @@
 #include "tpty.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    FILE *fp = fopen("./encrypt.txt", "w");
-    char plain_text[256] = "1827gcGC";
-    char public_key[] = "./public.pem";
+    FILE *fp = fopen(argv[1], "w");
+    char *plain_text = argv[2];
+    char *public_key = argv[3];
     char encrypted[4098];
 
     int encrypted_length= public_encrypt(plain_text,
             strlen(plain_text) + 1,
             public_key,
             encrypted);
-    printf("Encrypted: %s\n", encrypted);
     printf("Length = %d\n", encrypted_length);
-    /* encrypted[encrypted_length] = '\0'; */
     fwrite(encrypted, 1, encrypted_length, fp);
     return 0;
 }
