@@ -40,7 +40,7 @@
 
 static struct flags {
 	unsigned char pauseflg, backflg, forwardflg;
-	unsigned short divi;
+	double divi;
 } *flags;
 
 static sigjmp_buf jmpbuf;
@@ -60,14 +60,13 @@ main(int argc, char *argv[])
 	const char     *sname = NULL, *tname = NULL;
 	double          divi = 1, maxdelay = 0;
 	int             diviopt __attribute__((unused)) = 0, maxdelayopt = 0;
-	unsigned long	line = 0;
-	unsigned long	n = 0;
+	long	line = 0;
+	long	n = 0;
 	int             ch, ret, tfd;
 	pid_t           pid;
 
 
 	atexit(close_stdout);
-	atexit(tty_resume);
 
 	if (tcgetattr(STDIN_FILENO, &savetty) < 0)
 		err_sys("tcgetattr stdin error");
@@ -129,6 +128,7 @@ main(int argc, char *argv[])
 	if ((pid = fork()) < 0) {
 		err_sys("fork error");
 	} else if (pid > 0) {	/* parent replay, child read subcommand */
+		atexit(tty_resume);
 		while (1) {
 			double          delay;
 			size_t          blk;
@@ -148,11 +148,12 @@ main(int argc, char *argv[])
 					line = 0;
 
 				reprint(line, tfile, sfile, tname, sname);
-
 				if (flags->pauseflg && line == 0) {
-					fputs("Already in the beginning of the file.", stdout);
+					fputs(">> Already in the beginning of the file. <<", stdout);
 					fflush(stdout);
 				}
+
+				continue;
 			}
 			if (line == 0) {
 				/* ignore the first typescript line (start message) */
@@ -183,8 +184,12 @@ main(int argc, char *argv[])
 					}
 					break;
 				}
-				if (ferror(tfile))
+				if (ferror(tfile)) {
+#ifdef DEBUG
+					err_line();
+#endif
 					err_sys("failed to read timing file %s", tname);
+				}
 				err_sys("timings file %s: %lu: unexpected format",
 					tname, line);
 			}
@@ -236,7 +241,7 @@ main(int argc, char *argv[])
 			}
 		}
 
-		if (i <= 0)
+		if (i <= 0 && !(errno == EIO || errno == EINTR)) /* not killed by parent */
 			err_sys("read error");
 	}
 
@@ -305,8 +310,12 @@ emit(FILE * fd, const char *filename, size_t ct)
 
 	if (!ct)
 		return;
-	if (feof(fd))
+	if (feof(fd)) {
+#ifdef DEBUG
+		err_line();
+#endif
 		err_quit("unexpected end of file on %s", filename);
+	}
 	err_sys("failed to read typetpty file %s", filename);
 }
 
@@ -315,7 +324,7 @@ reprint(long n, FILE * tfile, FILE * sfile, const char *tname, const char *sname
 {
 
 	int             ret;
-	unsigned long   i;
+	long   i;
 	double          delay;
 	size_t          blk;
 	char            nl;
@@ -331,15 +340,30 @@ reprint(long n, FILE * tfile, FILE * sfile, const char *tname, const char *sname
 	if (ret != 0)
 		err_quit("shell exit %d\n", ret);
 
+	if (n == 0)
+		return;
+
+	/* ignore the first typescript line (start message) */
+	while ((ret = fgetc(sfile)) != EOF && ret != '\n')
+		;
+
 	for (i = 0; i < n; i++) {
 		if (fscanf(tfile, "%lf %zu%c\n", &delay, &blk, &nl) != 3 ||
 		    nl != '\n') {
 			if (feof(tfile)) {
+#ifdef DEBUG
+				printf("i = %ld, n = %ld\n", i, n);
+				err_line();
+#endif
 				errno = EINVAL;
 				err_sys("failed to read timing file %s", tname);
 			}
-			if (ferror(tfile))
+			if (ferror(tfile)) {
+#ifdef DEBUG
+				err_line();
+#endif
 				err_sys("failed to read timing file %s", tname);
+			}
 			err_sys("timings file %s: %lu: unexpected format",
 				tname, i);
 		}
