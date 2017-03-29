@@ -1,0 +1,46 @@
+
+		Frequently Asked Questions about tpty
+
+________________________________________________________________________________
+
+This file contains frequently asked questions about tpty and answers to them.
+
+Gong Cun <gong_cun@bocmacau.com>
+March 26, 2017
+________________________________________________________________________________
+
+Table of Contents:
+
+1.0	General Concepts
+1.1	Tpty -- what is it?
+1.2	Where do I get tpty?
+1.3	Is there an tpty license
+
+2.0	Tpty Ports
+2.1	What ports exist?
+
+3.0	Tpty Problems
+3.1	Compilation Problems
+3.1.1	Can I alter tpty's make(1) behavior
+3.2	Configuration Problems
+
+3.1.1	Can I alter tpty's make(1) behavior?
+
+	Yes. There are at least two ways to do that.
+
+	You can put replacements for tpty Makefile strings in your
+	environment.  If you specify the -e make option, make will give
+	environment variable values precedence over strings from the Makefile.
+	For example:
+
+	    $ export LDFLAGS=-L<directory>
+	    $ export CPPFLAGS=-I<directory>
+	    $ export CC=foobar
+	    $ make -e
+
+	You can also replace tpty Makefile strings in the make command
+	invocation:
+
+	    $ make CC=foobar
+
+
