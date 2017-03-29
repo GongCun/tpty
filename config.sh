@@ -3,7 +3,7 @@
 DIR=`dirname $0`
 TEMPC=${DIR}/temp.c
 HEADER=${DIR}/config.h
-EXTRALIBS="-lm -lcrypto"
+EXTRALIBS="-lcrypto"
 CC=${CC:-cc}
 
 which $CC >/dev/null 2>&1 || { echo "can't find compiler" >&2; exit 1; }

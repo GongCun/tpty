@@ -47,8 +47,8 @@
  */
 
 
-#define OPTSTR "Ia:r:t:d:c:einvxo:Xp:k:u"
-#define HELP "usage: tpty [ -x -f config ] [ -t timeout -d driver -einuvXI -o output -r record -a auditfile -p RSAPrivateKey -k EncryptedKey ] program [ args ... ]"
+#define OPTSTR "Ia:T:t:d:c:einvxo:Xp:k:u"
+#define HELP "usage: tpty [ -x -f config ] [ -T timeout -d driver -einuvXI -o output -t timefile -a auditfile -p RSAPrivateKey -k EncryptedKey ] program [ args ... ]"
 
 
 static void
@@ -158,7 +158,7 @@ main(int argc, char **argv)
 			err_quit("The -p option is not supported because can't find the OPENSSL lib.");
 #endif
 			break;
-		case 'r':	/* reacord data for replay */
+		case 't':	/* record timing date */
 			if (optarg && !(timingfd = fopen(optarg, "w")))
 				err_sys("cannot open %s", optarg);
 			/*
@@ -171,7 +171,7 @@ main(int argc, char **argv)
 				err_sys("lock_reg error");
 			tflg = 1;
 			break;
-		case 't':	/* set timeout */
+		case 'T':	/* set timeout */
 			timeout = atoi(optarg);
 			break;
 		case 'u':	/* remove key file */
