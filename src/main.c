@@ -48,7 +48,7 @@
 
 
 #define OPTSTR "Ia:T:t:d:c:einvxo:Xp:k:u"
-#define HELP "usage: tpty [ -x -f config ] [ -T timeout -d driver -einuvXI -o output -t timefile -a auditfile -p RSAPrivateKey -k EncryptedKey ] program [ args ... ]"
+#define HELP "usage: tpty [ -x -c config ] [ -T timeout -d driver -einuvXI -o output -t timefile -a auditfile -p RSAPrivateKey -k EncryptedKey ] program [ args ... ]"
 
 
 static void

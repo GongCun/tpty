@@ -51,8 +51,6 @@ static void delay_for(double delay);
 static void emit(FILE *, const char *, size_t);
 static void reprint(long, FILE *, FILE *, const char *, const char *);
 static void tty_resume(void);
-static void lock_wait(int fd);
-static void lock_release(int fd);
 
 
 int
@@ -65,8 +63,6 @@ main(int argc, char *argv[])
 	long		line = 0;
 	long		n = 0;
 	int		ch, ret, tfd;
-	int		tmpfd;
-	char		*tmpfile;
 	pid_t		pid;
 
 
@@ -112,6 +108,11 @@ main(int argc, char *argv[])
 	if (tfd < 0)
 		err_sys("fileno error");
 
+	/**********************************************************************
+ 	 * In fact the parent and child process will produce the race
+	 * condition in the shared memory, but if we use file lock, the child
+	 * process is likely can't get lock, so decided not to lock.
+	 **********************************************************************/
 #ifdef MAP_ANON
 	flags = mmap(0, sizeof(struct flags),
 			PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
@@ -127,31 +128,14 @@ main(int argc, char *argv[])
 	memset(flags, 0, sizeof(struct flags));
 	flags->divi = divi;
 
-	/*
- 	 * Open temp file for lock control.
-	 */
-	tmpfile = tempnam("/tmp", "tpty.");
-#ifdef DEBUG
-	fprintf(stderr, "tmpfile = %s\n", tmpfile);
-#endif
-	tmpfd = open(tmpfile, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-	if (tmpfd < 0)
-		err_sys("open %s error", tmpfile);
-	if (unlink(tmpfile) < 0)
-		err_sys("unlink %s error", tmpfile); 
-	
+	/*---------------------------------------------------------------------*/
+
 
 	if ((pid = fork()) < 0) {
 		err_sys("fork error");
 	} else if (pid > 0) {	/* parent replay, child read subcommand */
 		atexit(tty_resume);
 		while (1) {
-			/*
- 			 * try to lock and change the value of shared memory
- 			 */
-			lock_wait(tmpfd);
-			err_msg(">>> parent got lock");
-
 			double          delay;
 			size_t          blk;
 			char            nl;
@@ -193,7 +177,7 @@ main(int argc, char *argv[])
 				if (feof(tfile)) {
 					if (lock_test(tfd, F_WRLCK, 0, SEEK_SET, 0) != 0) {
 #ifdef MACOS
-						long            offset = ftell(tfile);
+						long offset = ftell(tfile);
 						if (offset == -1L)
 							err_sys("ftell error");
 						tfile = freopen(tname, "r", tfile);
@@ -226,10 +210,6 @@ main(int argc, char *argv[])
 				delay_for(delay);
 			emit(sfile, sname, blk);
 			line++;
-
-			/* release the lock so child process can change */
-			lock_release(tmpfd);
-			err_msg(">>> parent released lock");
 		}
 
 		fclose(sfile);
@@ -244,8 +224,6 @@ main(int argc, char *argv[])
 		if (tty_cbreak(STDIN_FILENO) < 0)
 			err_sys("tty_cbreak error");
 		while ((i = read(STDIN_FILENO, &c, 1)) == 1) {
-			lock_wait(tmpfd);
-			err_msg(">>> child got lock");
 			switch (c) {
 				case ' ':
 					flags->pauseflg = (flags->pauseflg + 1) % 2;
@@ -266,8 +244,6 @@ main(int argc, char *argv[])
 					flags->divi = 1;
 					break;
 			}
-			lock_release(tmpfd);
-			err_msg(">>> child released lock");
 		}
 
 		if (i <= 0 && !(errno == EIO || errno == EINTR)) /* not killed by parent */
@@ -409,24 +385,6 @@ tty_resume(void)
 	if (tcsetattr(STDIN_FILENO, TCSANOW, &savetty) < 0)
 		err_sys("tcsetattr() error");
 	system("tput cnorm");
+	system("tput sgr0");
 	writen(STDOUT_FILENO, ENDMSG, strlen(ENDMSG));
-}
-
-static void 
-lock_wait(int fd)
-{
-	while (lock_reg(fd, F_SETLK, F_WRLCK, 0, SEEK_SET, 0) < 0) {
-		if (errno == EINTR || errno == EACCES || errno == EAGAIN)
-			continue;
-		else
-			err_sys("lock_reg() F_WRLCK error");
-	}
-
-}
-
-static void 
-lock_release(int fd)
-{
-	if (lock_reg(fd, F_SETLKW, F_UNLCK, 0, SEEK_SET, 0) < 0)
-		err_sys("lock_reg() F_UNLCK error");
 }

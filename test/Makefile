@@ -7,7 +7,7 @@ CFLAGS += -D$(PLATFORM)
 PROGS =	sig_test time_test fscanf_test strlen_test atoi_test struct_test \
 	char_test getc_test wait_test child_test str_test fdebug_test \
 	regex_test fread_test sig_test02 err_test compile_test gettime_test \
-	lock_test
+	lock_test delim_test
 
 ifneq (,$(findstring -lcrypto,$(EXTRALIBS)))
 	PROGS := $(PROGS) rsa_test rsa_test2
@@ -78,6 +78,9 @@ gettime_test: gettime_test.o $(LIBTPTY)
 
 lock_test: lock_test.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o $@ lock_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
+
+delim_test: delim_test.o $(LIBTPTY)
+	$(CC) $(CFLAGS) -o $@ delim_test.o $(LDFLAGS) $(LDLIBS) $(EXTRA)
 
 clean:
 	rm -f $(PROGS) $(TEMPFILES) *.o a.out tpty*
