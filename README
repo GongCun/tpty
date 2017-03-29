@@ -1,15 +1,23 @@
 Read the file called DISCLAIMER.
 
-On AIX, type "gmake".
-On other platforms, type "make" (as long as this is gnu make).
+Run the following command command, export the environment if need.
+% export LDFLAGS=-L<ExtraPath>
+% export CPPFLAGS=-I<ExtraPath>
+% ./config.sh
+
+On AIX, type "gmake -e".
+On other platforms, type "make -e" (as long as this is gnu make).
+
+Or if you want to alter the compiler, you can run
+% make CC=foobar
+
 
 Usage:
-See tpty(1) & tptyreplay(1) manual and samples under tpty directory.
+See tpty(1)/tptyreplay(1)/tpty-crypt(1) manual and samples under tpty directory.
 
-Please, send all your reports, patches and suggestions to 
-gongcunjust@gmail.com. Developers are welcome.
+Please, send all your reports, patches and suggestions to <gong_cun@bocmacau.com>,
+Developers are welcome.
 
-March 19, 2015
 Cun Gong
-gongcunjust@gmail.com
+gong_cun@bocmacau.com
 
