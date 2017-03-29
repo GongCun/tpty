@@ -81,7 +81,7 @@ pty_fork(int *ptrfdm, char *slave_name, int slave_namesz,
 		 * set slave's termios and window size
 		 */
 		if (slave_termios != NULL) {
-			if (tcsetattr(fds, TCSANOW, slave_termios) < 0)
+			if (tcsetattr(fds, TCSAFLUSH, slave_termios) < 0)
 				err_sys("tcsetattr error on slave pty");
 		}
 		if (slave_winsize != NULL) {

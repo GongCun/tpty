@@ -257,9 +257,9 @@ main(int argc, char **argv)
 	if (interactive && driver == NULL && defdriver == 0) {
 		if (tty_raw(STDIN_FILENO) < 0)	/* user's tty to raw mode */
 			err_sys("tty_raw error");
-		if (atexit(tty_atexit) < 0)	/* reset user's tty on exit */
-			err_sys("atexit error");
 	}
+	if (atexit(tty_atexit) < 0)	/* reset user's tty on exit */
+		err_sys("atexit error");
 	if (driver || defdriver == 1) {
 		if ((childpid = fork()) < 0) {
 			err_sys("fork error");
@@ -275,19 +275,22 @@ main(int argc, char **argv)
 				err_sys("waitpid");
 			ret = sys_exit(status);
 			if (manflg == 0) { /* if no need interact mannually, wait and exit */
-				if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-					err_sys("signal SIGALRM error");
-				if (timeout > 0)
-					alarm(timeout);
-				if (sigsetjmp(jmpbuf, 1))
-					err_quit("tpty timed out");
-				if (waitpid(pid, &status, 0) < 0)
-					err_sys("waitpid error");
-				alarm(0);
+				if (!defdriver) {
+					if (signal(SIGALRM, sig_alrm) == SIG_ERR)
+						err_sys("signal SIGALRM error");
+					if (timeout > 0)
+						alarm(timeout);
+					if (sigsetjmp(jmpbuf, 1))
+						err_quit("tpty timed out");
+					if (waitpid(pid, &status, 0) < 0)
+						err_sys("waitpid error");
+					alarm(0);
+				}
 				ret |= sys_exit(status);
-				exit(ret);
+				if (ret)
+					err_quit("tpty error: rc=%d", ret);
 			}
-			if (!ret)
+			if (ret)
 				err_quit("driver exception: rc=%d\n", ret);
 			/* open /dev/tty to give user keyboard control */
 			do_driver(inter_driver);
@@ -337,7 +340,7 @@ set_noecho(int fd)
 	 */
 	stermios.c_oflag &= ~(ONLCR);
 
-	if (tcsetattr(fd, TCSANOW, &stermios) < 0)
+	if (tcsetattr(fd, TCSAFLUSH, &stermios) < 0)
 		err_sys("tcsetattr error");
 }
 
