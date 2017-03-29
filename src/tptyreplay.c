@@ -240,9 +240,9 @@ main(int argc, char *argv[])
 				case 'f':
 					flags->forwardflg = 1;
 					break;
+				case '\n':
 				default: /* resume to original speed */
 					flags->divi = 1;
-					break;
 			}
 		}
 
