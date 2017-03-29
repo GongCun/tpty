@@ -51,19 +51,23 @@ static void delay_for(double delay);
 static void emit(FILE *, const char *, size_t);
 static void reprint(long, FILE *, FILE *, const char *, const char *);
 static void tty_resume(void);
+static void lock_wait(int fd);
+static void lock_release(int fd);
 
 
 int
 main(int argc, char *argv[])
 {
-	FILE           *tfile, *sfile;
-	const char     *sname = NULL, *tname = NULL;
-	double          divi = 1, maxdelay = 0;
-	int             diviopt __attribute__((unused)) = 0, maxdelayopt = 0;
-	long	line = 0;
-	long	n = 0;
-	int             ch, ret, tfd;
-	pid_t           pid;
+	FILE		*tfile, *sfile;
+	const char	*sname = NULL, *tname = NULL;
+	double		divi = 1, maxdelay = 0;
+	int		maxdelayopt = 0;
+	long		line = 0;
+	long		n = 0;
+	int		ch, ret, tfd;
+	int		tmpfd;
+	char		*tmpfile;
+	pid_t		pid;
 
 
 	atexit(close_stdout);
@@ -81,7 +85,6 @@ main(int argc, char *argv[])
 			sname = optarg;
 			break;
 		case 'd':
-			diviopt = 1;
 			divi = getnum(optarg);
 			break;
 		case 'm':
@@ -123,6 +126,19 @@ main(int argc, char *argv[])
 		err_sys("mmap() error");
 	memset(flags, 0, sizeof(struct flags));
 	flags->divi = divi;
+
+	/*
+ 	 * Open temp file for lock control.
+	 */
+	tmpfile = tempnam("/tmp", "tpty.");
+#ifdef DEBUG
+	fprintf(stderr, "tmpfile = %s\n", tmpfile);
+#endif
+	tmpfd = open(tmpfile, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+	if (tmpfd < 0)
+		err_sys("open %s error", tmpfile);
+	if (unlink(tmpfile) < 0)
+		err_sys("unlink %s error", tmpfile); 
 	
 
 	if ((pid = fork()) < 0) {
@@ -130,6 +146,12 @@ main(int argc, char *argv[])
 	} else if (pid > 0) {	/* parent replay, child read subcommand */
 		atexit(tty_resume);
 		while (1) {
+			/*
+ 			 * try to lock and change the value of shared memory
+ 			 */
+			lock_wait(tmpfd);
+			err_msg(">>> parent got lock");
+
 			double          delay;
 			size_t          blk;
 			char            nl;
@@ -205,6 +227,9 @@ main(int argc, char *argv[])
 			emit(sfile, sname, blk);
 			line++;
 
+			/* release the lock so child process can change */
+			lock_release(tmpfd);
+			err_msg(">>> parent released lock");
 		}
 
 		fclose(sfile);
@@ -219,6 +244,8 @@ main(int argc, char *argv[])
 		if (tty_cbreak(STDIN_FILENO) < 0)
 			err_sys("tty_cbreak error");
 		while ((i = read(STDIN_FILENO, &c, 1)) == 1) {
+			lock_wait(tmpfd);
+			err_msg(">>> child got lock");
 			switch (c) {
 				case ' ':
 					flags->pauseflg = (flags->pauseflg + 1) % 2;
@@ -239,6 +266,8 @@ main(int argc, char *argv[])
 					flags->divi = 1;
 					break;
 			}
+			lock_release(tmpfd);
+			err_msg(">>> child released lock");
 		}
 
 		if (i <= 0 && !(errno == EIO || errno == EINTR)) /* not killed by parent */
@@ -381,4 +410,23 @@ tty_resume(void)
 		err_sys("tcsetattr() error");
 	system("tput cnorm");
 	writen(STDOUT_FILENO, ENDMSG, strlen(ENDMSG));
+}
+
+static void 
+lock_wait(int fd)
+{
+	while (lock_reg(fd, F_SETLK, F_WRLCK, 0, SEEK_SET, 0) < 0) {
+		if (errno == EINTR || errno == EACCES || errno == EAGAIN)
+			continue;
+		else
+			err_sys("lock_reg() F_WRLCK error");
+	}
+
+}
+
+static void 
+lock_release(int fd)
+{
+	if (lock_reg(fd, F_SETLKW, F_UNLCK, 0, SEEK_SET, 0) < 0)
+		err_sys("lock_reg() F_UNLCK error");
 }

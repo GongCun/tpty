@@ -1,10 +1,20 @@
-head	1.3;
+head	1.5;
 access;
 symbols;
 locks
-	root:1.3; strict;
+	root:1.5; strict;
 comment	@ * @;
 
+
+1.5
+date	2017.03.29.04.08.23;	author root;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2017.03.29.02.58.35;	author root;	state Exp;
+branches;
+next	1.3;
 
 1.3
 date	2017.03.29.02.41.22;	author root;	state Exp;
@@ -26,7 +36,7 @@ desc
 @@
 
 
-1.3
+1.5
 log
 @*** empty log message ***
 @
@@ -73,7 +83,7 @@ text
 
 static struct flags {
 	unsigned char pauseflg, backflg, forwardflg;
-	unsigned short divi;
+	double divi;
 } *flags;
 
 static sigjmp_buf jmpbuf;
@@ -84,19 +94,23 @@ static void delay_for(double delay);
 static void emit(FILE *, const char *, size_t);
 static void reprint(long, FILE *, FILE *, const char *, const char *);
 static void tty_resume(void);
+static void lock_wait(int fd);
+static void lock_release(int fd);
 
 
 int
 main(int argc, char *argv[])
 {
-	FILE           *tfile, *sfile;
-	const char     *sname = NULL, *tname = NULL;
-	double          divi = 1, maxdelay = 0;
-	int             diviopt __attribute__((unused)) = 0, maxdelayopt = 0;
-	long	line = 0;
-	long	n = 0;
-	int             ch, ret, tfd;
-	pid_t           pid;
+	FILE		*tfile, *sfile;
+	const char	*sname = NULL, *tname = NULL;
+	double		divi = 1, maxdelay = 0;
+	int		maxdelayopt = 0;
+	long		line = 0;
+	long		n = 0;
+	int		ch, ret, tfd;
+	int		tmpfd;
+	char		*tmpfile;
+	pid_t		pid;
 
 
 	atexit(close_stdout);
@@ -114,7 +128,6 @@ main(int argc, char *argv[])
 			sname = optarg;
 			break;
 		case 'd':
-			diviopt = 1;
 			divi = getnum(optarg);
 			break;
 		case 'm':
@@ -156,6 +169,19 @@ main(int argc, char *argv[])
 		err_sys("mmap() error");
 	memset(flags, 0, sizeof(struct flags));
 	flags->divi = divi;
+
+	/*
+ 	 * Open temp file for lock control.
+	 */
+	tmpfile = tempnam("/tmp", "tpty.");
+#ifdef DEBUG
+	fprintf(stderr, "tmpfile = %s\n", tmpfile);
+#endif
+	tmpfd = open(tmpfile, O_RDWR|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+	if (tmpfd < 0)
+		err_sys("open %s error", tmpfile);
+	if (unlink(tmpfile) < 0)
+		err_sys("unlink %s error", tmpfile); 
 	
 
 	if ((pid = fork()) < 0) {
@@ -163,6 +189,12 @@ main(int argc, char *argv[])
 	} else if (pid > 0) {	/* parent replay, child read subcommand */
 		atexit(tty_resume);
 		while (1) {
+			/*
+ 			 * try to lock and change the value of shared memory
+ 			 */
+			lock_wait(tmpfd);
+			err_msg(">>> parent got lock");
+
 			double          delay;
 			size_t          blk;
 			char            nl;
@@ -180,12 +212,10 @@ main(int argc, char *argv[])
 				if ((line = --n) < 0)
 					line = 0;
 
+				reprint(line, tfile, sfile, tname, sname);
 				if (flags->pauseflg && line == 0) {
-					fputs(">> Already in the beginning of the file. <<\n", stdout);
+					fputs(">> Already in the beginning of the file. <<", stdout);
 					fflush(stdout);
-				} else {
-					printf("line = %ld\n", line);
-					reprint(line, tfile, sfile, tname, sname);
 				}
 
 				continue;
@@ -240,6 +270,9 @@ main(int argc, char *argv[])
 			emit(sfile, sname, blk);
 			line++;
 
+			/* release the lock so child process can change */
+			lock_release(tmpfd);
+			err_msg(">>> parent released lock");
 		}
 
 		fclose(sfile);
@@ -254,6 +287,8 @@ main(int argc, char *argv[])
 		if (tty_cbreak(STDIN_FILENO) < 0)
 			err_sys("tty_cbreak error");
 		while ((i = read(STDIN_FILENO, &c, 1)) == 1) {
+			lock_wait(tmpfd);
+			err_msg(">>> child got lock");
 			switch (c) {
 				case ' ':
 					flags->pauseflg = (flags->pauseflg + 1) % 2;
@@ -274,6 +309,8 @@ main(int argc, char *argv[])
 					flags->divi = 1;
 					break;
 			}
+			lock_release(tmpfd);
+			err_msg(">>> child released lock");
 		}
 
 		if (i <= 0 && !(errno == EIO || errno == EINTR)) /* not killed by parent */
@@ -345,8 +382,12 @@ emit(FILE * fd, const char *filename, size_t ct)
 
 	if (!ct)
 		return;
-	if (feof(fd))
+	if (feof(fd)) {
+#ifdef DEBUG
+		err_line();
+#endif
 		err_quit("unexpected end of file on %s", filename);
+	}
 	err_sys("failed to read typetpty file %s", filename);
 }
 
@@ -370,6 +411,9 @@ reprint(long n, FILE * tfile, FILE * sfile, const char *tname, const char *sname
 		err_sys("system() error");
 	if (ret != 0)
 		err_quit("shell exit %d\n", ret);
+
+	if (n == 0)
+		return;
 
 	/* ignore the first typescript line (start message) */
 	while ((ret = fgetc(sfile)) != EOF && ret != '\n')
@@ -410,6 +454,76 @@ tty_resume(void)
 	system("tput cnorm");
 	writen(STDOUT_FILENO, ENDMSG, strlen(ENDMSG));
 }
+
+static void 
+lock_wait(int fd)
+{
+	while (lock_reg(fd, F_SETLK, F_WRLCK, 0, SEEK_SET, 0) < 0) {
+		if (errno == EINTR || errno == EACCES || errno == EAGAIN)
+			continue;
+		else
+			err_sys("lock_reg() F_WRLCK error");
+	}
+
+}
+
+static void 
+lock_release(int fd)
+{
+	if (lock_reg(fd, F_SETLKW, F_UNLCK, 0, SEEK_SET, 0) < 0)
+		err_sys("lock_reg() F_UNLCK error");
+}
+@
+
+
+1.4
+log
+@*** empty log message ***
+@
+text
+@d54 2
+d61 10
+a70 8
+	FILE           *tfile, *sfile;
+	const char     *sname = NULL, *tname = NULL;
+	double          divi = 1, maxdelay = 0;
+	int             diviopt __attribute__((unused)) = 0, maxdelayopt = 0;
+	long	line = 0;
+	long	n = 0;
+	int             ch, ret, tfd;
+	pid_t           pid;
+a87 1
+			diviopt = 1;
+d129 13
+d149 6
+d230 3
+d247 2
+d269 2
+d413 19
+@
+
+
+1.3
+log
+@*** empty log message ***
+@
+text
+@d43 1
+a43 1
+	unsigned short divi;
+d150 1
+d152 1
+a152 1
+					fputs(">> Already in the beginning of the file. <<\n", stdout);
+a153 3
+				} else {
+					printf("line = %ld\n", line);
+					reprint(line, tfile, sfile, tname, sname);
+d313 4
+a316 1
+	if (feof(fd))
+d318 1
+d342 3
 @
 
 
