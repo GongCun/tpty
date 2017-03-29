@@ -1,4 +1,4 @@
-Read the file called DISCLAIMER.
+Read the file called COPYRIGHT.
 
 Run the following command, export the environment if need.
 % export LDFLAGS=-L<ExtraPath>
