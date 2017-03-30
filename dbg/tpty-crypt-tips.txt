@@ -1,1 +1,0 @@
-./tpty-crypt test.txt.mac assword: ./public.pem key.store

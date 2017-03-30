@@ -1,4 +1,7 @@
 The ./oper_login.ksh is a sample of a operater's login shell.
-The ./tpty_telnet.ksh is a sample of login to the Cisco switch.
-The ./tpty_telnet2.ksh is a sample of login to the IBM SAN switch.
-The ./ucm_ssh.ksh is sample of control user's login permission.
+
+The ./tpty_cisco.ksh is a sample of login to the Cisco switch.
+
+The ./tpty_crypt.ksh is sample of using the encrypted config.
+
+More sample please see the tpty(1) manual.

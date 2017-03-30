@@ -1,4 +1,0 @@
-scriptreplay --timing tpty.tm --typescript tpty.out
-tptyreplay -t typepty.150228.tm -s typepty.150228
-tptyreplay -t typepty.150228.tm -s typepty.150228 -m 2
-tpty -o $DUMP -r $DUMPTM menu.pl

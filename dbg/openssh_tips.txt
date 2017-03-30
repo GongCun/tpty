@@ -1,5 +1,0 @@
-openssl genrsa -out private.pem 2048
-openssl rsa -in private.pem -outform PEM -pubout -out public.pem
-./tpty-crypt test.txt.mac assword: ./public.pem ./test.txt.mac.key
-./tpty -t -1 -x -f test.txt.mac -p ./private.pem -k test.txt.mac.key telnet -l gongcun 192.168.0.110
-sudo apt-get install libssl-dev
