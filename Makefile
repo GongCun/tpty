@@ -11,6 +11,7 @@ all:
 
 install:
 	cd src && $(MAKE) install
+	cd man && $(MAKE) install
 
 clean:
 	for i in $(DIRS) bin dbg test; do \

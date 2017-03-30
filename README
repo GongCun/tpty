@@ -26,6 +26,9 @@ Quick Start
 0.1	Usage
 
 	See tpty(1), tptyreplay(1) manual and samples under sample directory.
+	After install, you can use the following command to see man page:
+
+	    $ MANPATH=/usr/local/share/man man tpty
 
 ______________________________________________________________________________________________
 
