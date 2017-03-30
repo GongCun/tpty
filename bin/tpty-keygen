@@ -1,29 +1,30 @@
-#
-
-which openssl >/dev/null
-[ $? -ne 0 ] && {
-    echo "error: cannot find openssl" >&2
-    exit 1
-}
-
-[ $# -ne 1 ] && {
-    echo "input rsa key name" >&2
-    exit 1
-}
+#!/bin/sh
 
 KEY=$1
-openssl genrsa -out $KEY 2048
-[ $? -eq 0 ] && {
-    openssl rsa -in $KEY -outform PEM -pubout -out $KEY.pub
-} || {
-    echo "generate private key error" >&2
+
+if ! which openssl >/dev/null 2>&1
+then
+    echo "error: cannot find openssl" >&2
+    exit 1
+fi
+
+[ ! "$KEY" ] && {
+    echo "`basename $0` <KeyName>" >&2
     exit 1
 }
 
-[ $? -eq 0 ] && {
+if openssl genrsa -out $KEY 2048 >/dev/null 2>&1
+then
     echo "private key : $KEY"
+else
+    echo "generate private key error" >&2
+    exit 1
+fi
+
+if openssl rsa -in $KEY -outform PEM -pubout -out $KEY.pub >/dev/null 2>&1
+then
     echo "public  key : $KEY.pub"
-} || {
+else
     echo "generate public key error" >&2
     exit 1
-}
+fi
