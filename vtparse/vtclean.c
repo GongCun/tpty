@@ -48,4 +48,6 @@ main()
 	while ((bytes = read(0, buf, sizeof(buf))) > 0) {
 		vtparse(&parser, buf, bytes);
 	}
+
+	return(0);
 }

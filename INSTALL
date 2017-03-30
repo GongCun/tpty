@@ -1,6 +1,29 @@
-## On Mac OS X
-$ brew install openssl
-$ export LDFLAGS=-L/usr/local/opt/openssl/lib
-$ export CPPFLAGS=-I/usr/local/opt/openssl/include
-$ ./config.sh
-$ make -e
+1. Install the tpty* program
+
+Run the following command to install
+
+    $ ./config.sh
+    $ make
+    $ make install
+
+If the config.sh can't find the OpenSSL library, will not install the tpty-crypt
+program. If you have installed the OpenSSL library, please setup the environment 
+variable:
+
+    $ export LDFLAGS=-L<path>
+    $ export CPPFLAGS=-I<path>
+    $ ./config.sh
+    $ make -e
+    $ make install
+
+You also can alter the compiler:
+
+    $ make CC=foo
+
+
+2. Install the vtclean program
+
+You should install the ruby first, then
+
+    $ cd vtparse
+    $ make vtclean

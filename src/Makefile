@@ -20,6 +20,7 @@ all:	$(PROGS)
 tpty:	main.o loop.o do_driver.o $(LIBTPTY)
 	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LDFLAGS) $(LDLIBS)
 	@[ -d ../bin/ ] || mkdir -p ../bin
+	@cp -p $@ ../bin
 	@(cd ../dbg; ln -sf ../bin/$@ .)
 
 tptyreplay: tptyreplay.o $(LIBTPTY)

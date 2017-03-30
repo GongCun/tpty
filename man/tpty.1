@@ -1,60 +1,58 @@
 .\" Manpage for tpty.
 .\" Contact gong_cun@bocmacau.com to correct errors or typos.
-.TH tpty 1 "10 April 2015" "1.07" "tpty man page"
+.TH tpty 1 "30 March 2015" "1.1" "tpty man page"
 .SH NAME
-\fBtpty\fP \- tpty execute the program in a session of its own, connected to a pseudo terminal.
+\fBtpty\fP \- tpty execute the program in a terminal session of its own, use
+to control the stream through the pseudo terminal.
 .SH SYNOPSIS
-\fBtpty\fP [ -x -f config ] [ -t timeout -d driver ] [ -einuvXI -o outfile -r recordfile -a auditfile -p RSAPrivateKey -k EncrypedKey ] program [ args ... ]
+\fBtpty\fP [ -x -c config ] [ -T timeout -d driver ] [ -einuvXI -o outfile -t
+timingfile -a auditfile -p RSAPrivateKey -k EncrypedKey ] program [ args ... ]
 .SH DESCRIPTION
-\fBtpty\fP disables the output buffering that occurs when program ouput is redirected.
-For example, suppose you are watching the output of Background-Running Job,
-You can disable this automatic buffering as follows:
+\fBtpty\fP based on Mr. Stevens's \fBpty\fP program, and its first function is
+to add a pseudo-terminal between the input and ouput of the program to
+unbuffer the standard I/O. For example, suppose you are watching the output of
+ Background-Running Job, you can disable this automatic buffering as follows:
 .nf
 
         tpty -i \fIprogram\fP < /dev/null > file.out &
 
 .fi
-If a coprocess used the standard I/O library for its input and output:
+
+Using the \fBtpty\fP, we can implement the \fBscript(1)\fP program as the foll
+-owing shell script:
 .nf
 
-        execl(program, program, (char *)0);
-        
-.fi
-we will not talk to the coprocess across a pipe, because the standard I/O library 
-fully buffered the standard input and standard output, leading to a deadlock. If we
-run the coprocess under \fBtpty\fP:
-.nf
-
-        execl("/usr/bin/tpty", "tpty", "-e", program, (char *)0);
-        
-.fi
-the program now works, even if the coprocess uses standard I/O.
-
-Using the \fBtpty\fP, we can implement the \fBscript(1)\fP program as the following
-shell script:
-.nf
-
-        #!/usr/bin/ksh
         tpty "${SHELL:-/usr/bin/ksh}" | tee typescript
         
 .fi
 or
 .nf
 
-        #!/usr/bin/ksh
         tpty -o typescript "${SHELL:-/usr/bin/ksh}"
         
 .fi
 
 
+Using the \fBtpty\fP, we can "talk" to the interactive programs noninteractive
+ly like the \fBexpect(1)\fP.  The option (\fB\-d\fP) allows \fBtpty\fP to be
+connected to a driver process for its input and output. The standard output of
+the driver is \fBtpty\fP's standard input and vice versa.
+.nf
 
-Using the \fBtpty\fP, we can "talk" to the interactive programs noninteractively 
-like the \fBexpect(1)\fP.
-The option (\fB\-d\fP) allows \fBtpty\fP to be connected to a driver process for
-its input and output. The standard output of the driver is \fBtpty\fP's standard input and
-vice versa.
+                                                      coprocess
+	+---------+   pipe1      +----------+         +-----------+
+	| driving |------------->| pseudo   |-------->|stdin      |
+	| program |<-------------| terminal |<--------|stdout     |
+	+---------+   pipe2      +----------+         +-----------+
 
-\fBtpty\fP provides the option (\fB\-x\fP) for default driver, if use default driver,
+.fi
+
+You can write the
+.I driver
+program yourself like this:
+
+\fBtpty\fP provides the option (\fB\-x\fP) for default driver, if use default 
+driver,
 you must specify the config file (\fB\-f\fP). The config file's format like:
 .nf
 
@@ -87,8 +85,10 @@ inputs the SendReply if the pattern matched. That means:
 
 The config file can use the regular expression, since if the ExpectString
 has symbol '%', you can use '.' to replace it.
-The symbols and subroutines is from \fBregex\fP. You must precede them with a \\ (backslash)
-if you want to match the special symbol itself. For example, \\$ matches a dollar sign.
+The symbols and subroutines is from \fBregex\fP. You must precede them with a 
+\\ (backslash)
+if you want to match the special symbol itself. For example, \\$ matches a dol
+lar sign.
 .nf
 
     login: %foo 
@@ -211,7 +211,8 @@ When the config file is ready, you can execute the following command:
 If the file is encrypted, execute:
 .nf
 
-        tpty -x -f \fIconfig\fP -p private.pem -k config.key telnet remote-host
+        tpty -x -f \fIconfig\fP -p private.pem -k config.key telnet remote-hos
+t
 
 .fi
 
@@ -238,7 +239,8 @@ Specifies the driver program for stdin/stdout.
 Does not echo characters for slave pty's line discipline.
 .TP
 \fB\-f\fP \fIconfig\fP
-Specifies the config file for default driver, must use \fB\-f\fP and \fB\-x\fP flags together.
+Specifies the config file for default driver, must use \fB\-f\fP and \fB\-x\fP
+ flags together.
 .TP
 \fB\-i\fP
 Ignore EOF on standard input.
@@ -260,22 +262,27 @@ Output timing data to \fIrecordfile\fP.
 This data contains two fields, separated by a space.
 The first field indicates how much time elapsed since the previous output.
 The second field indicates how many characters were output this time.
-This information can be used to replay outfile (-o) with realistic typing and output delays.
+This information can be used to replay outfile (-o) with realistic typing and 
+output delays.
 .TP
 \fB\-t\fP \fItimeout\fP
-If after timeout, none of interactive program's output have been seen, \fBtpty\fP
+If after timeout, none of interactive program's output have been seen, \fBtpty
+\fP
 will exit. If you don't specify the \fB-x\fP option,
-the \fBtimeout\fP will be ignored. Default timeout is 10 seconds. If \fBtimeout\fP < 0, will
+the \fBtimeout\fP will be ignored. Default timeout is 10 seconds. If \fBtimeou
+t\fP < 0, will
 wait forever.
 .TP
 \fB\-u\fP
 Unlink the encrypted key file (specified by \fB\-k\fP option).
 .TP
 \fB\-v\fP
-Verbose mode. It only displays the slave pty's device name, not is very helpful for debugging.
+Verbose mode. It only displays the slave pty's device name, not is very helpfu
+l for debugging.
 .TP
 \fB\-x\fP
-Choose default driver. Must use \fB\-f\fP and \fB\-x\fP flags together, it will interpret the
+Choose default driver. Must use \fB\-f\fP and \fB\-x\fP flags together, it wil
+l interpret the
 config file, drive interactive programs in noninteractive modes.
 .TP
 \fB\-X\fP

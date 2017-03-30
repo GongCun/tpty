@@ -1,0 +1,29 @@
+#
+
+which openssl >/dev/null
+[ $? -ne 0 ] && {
+    echo "error: cannot find openssl" >&2
+    exit 1
+}
+
+[ $# -ne 1 ] && {
+    echo "input rsa key name" >&2
+    exit 1
+}
+
+KEY=$1
+openssl genrsa -out $KEY 2048
+[ $? -eq 0 ] && {
+    openssl rsa -in $KEY -outform PEM -pubout -out $KEY.pub
+} || {
+    echo "generate private key error" >&2
+    exit 1
+}
+
+[ $? -eq 0 ] && {
+    echo "private key : $KEY"
+    echo "public  key : $KEY.pub"
+} || {
+    echo "generate public key error" >&2
+    exit 1
+}

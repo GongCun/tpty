@@ -9,6 +9,6 @@ install:
 	cd src && $(MAKE) install
 
 clean:
-	for i in $(DIRS); do \
+	for i in $(DIRS) bin dbg vtparse; do \
 		(cd $$i && echo "cleaning $$i" && $(MAKE) clean) || exit 1; \
 	done

@@ -4,7 +4,7 @@ RUBY_GENERATION_FILES = vtparse_gen_c_tables.rb vtparse_tables.rb
 all: vtparse_table.c vtparse_table.h vtparse_test vtclean
 
 clean:
-	rm -f vtparse_table.c vtparse_table.h vtparse_test vtclean
+	rm -rf vtparse_table.c vtparse_table.h vtparse_test vtclean *.dSYM
 
 vtparse_table.c: $(RUBY_GENERATION_FILES)
 	ruby vtparse_gen_c_tables.rb

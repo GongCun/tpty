@@ -34,5 +34,7 @@ int main()
         bytes = read(0, buf, 1024);
         vtparse(&parser, buf, bytes);
     }
+
+    return(0);
 }
 

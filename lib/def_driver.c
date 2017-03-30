@@ -283,6 +283,7 @@ fp2f(FILE * fp, int *p)
 			} else if (strstr(ptr, "<NOCR>") != NULL) {
 				exp_list[i].nocr = 1;
 			} else if (strstr(ptr, "<ENCRYPT>") != NULL) {
+#ifdef HAVE_OPENSSL
 				if (!(rsafd && keyfd))
 					err_quit("cannot open key or rsa file");
 				if (!fread(&offset, sizeof offset, 1, keyfd))	/* the encrypted key
@@ -292,6 +293,9 @@ fp2f(FILE * fp, int *p)
 				if (!len)
 					err_sys("fread encrypted string error");
 				private_decrypt(encrypted, len, rsafd, exp_list[i].cmd);
+#else
+				/* nothing to do */
+#endif
 			} else {
 				if (field)
 					strcat(exp_list[i].cmd, "%");
