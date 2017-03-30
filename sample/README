@@ -1,0 +1,7 @@
+The ./oper_login.ksh is a sample of a operater's login shell.
+
+The ./tpty_cisco.ksh is a sample of login to the Cisco switch.
+
+The ./tpty_crypt.ksh is sample of using the encrypted config.
+
+More sample please see the tpty(1) manual.

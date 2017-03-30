@@ -1,0 +1,86 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+CFLAGS	./strregex.c	27;"	d	file:
+EXTRALIBS	./Makefile	/^EXTRALIBS=$(shell $(ROOT)\/config.sh)$/;"	m
+INTER_EOF	./inter_driver.c	5;"	d	file:
+INTER_ERR	./inter_driver.c	7;"	d	file:
+INTER_TIMEOUT	./inter_driver.c	6;"	d	file:
+LIB_NAME	./Makefile	/^LIB_NAME = libtpty.a$/;"	m
+LIB_OBJS	./Makefile	/^	LIB_OBJS := $(LIB_OBJS) openssl_rsa.o$/;"	m
+LIB_OBJS	./Makefile	/^LIB_OBJS = readn.o writen.o s_pipe.o signal_rest.o signal_intr.o tty_noncanon.o \\$/;"	m
+PKCS1_PADDING_REM	./openssl_rsa.c	36;"	d	file:
+PLATFORM	./Makefile	/^PLATFORM=$(shell $(ROOT)\/systype.sh | tr 'a-z' 'A-Z')$/;"	m
+ROOT	./Makefile	/^ROOT=..$/;"	m
+TTY_CBREAK	./tty_noncanon.c	/^	TTY_RESET, TTY_RAW, TTY_CBREAK$/;"	e	enum:__anon1	file:
+TTY_CBREAK	./tty_noncanon.c	30;"	d	file:
+TTY_RAW	./tty_noncanon.c	/^	TTY_RESET, TTY_RAW, TTY_CBREAK$/;"	e	enum:__anon1	file:
+TTY_RAW	./tty_noncanon.c	29;"	d	file:
+TTY_RESET	./tty_noncanon.c	/^	TTY_RESET, TTY_RAW, TTY_CBREAK$/;"	e	enum:__anon1	file:
+TTY_RESET	./tty_noncanon.c	28;"	d	file:
+clr_fl	./clr_fl.c	/^void clr_fl(int fd, int flag)$/;"	f
+cmd	./def_driver.c	/^	char            cmd[BUFSIZ];$/;"	m	struct:f	file:
+create_rsa_with_filename	./openssl_rsa.c	/^create_rsa_with_filename(char *filename, int public)$/;"	f
+def_driver	./def_driver.c	/^def_driver(void)$/;"	f
+disable	./def_driver.c	/^	int             disable;$/;"	m	struct:f	file:
+err_doit	./error.c	/^err_doit(int errnoflag, int error, const char *fmt, va_list ap)$/;"	f	file:
+err_dump	./error.c	/^err_dump(const char *fmt,...)$/;"	f
+err_exit	./error.c	/^err_exit(int error, const char *fmt,...)$/;"	f
+err_msg	./error.c	/^err_msg(const char *fmt,...)$/;"	f
+err_quit	./error.c	/^err_quit(const char *fmt,...)$/;"	f
+err_ret	./error.c	/^err_ret(const char *fmt,...)$/;"	f
+err_ssl	./openssl_rsa.c	/^void err_ssl(void)$/;"	f
+err_sys	./error.c	/^err_sys(const char *fmt,...)$/;"	f
+exp_list	./def_driver.c	/^}               exp_list[EXP_FULL];$/;"	v	typeref:struct:f	file:
+f	./def_driver.c	/^static struct f {$/;"	s	file:
+fdbg	./def_driver.c	/^FILE           *fdbg;$/;"	v
+fdebug	./fdebug.c	/^fdebug(FILE * fp, const char *fmt,...)$/;"	f
+fp2f	./def_driver.c	/^fp2f(FILE * fp, int *p)$/;"	f	file:
+grantpt	./ptym.c	/^int grantpt(int fdm)$/;"	f
+grantpt	./ptym_bsd.c	/^int grantpt(int fdm)$/;"	f
+i_read	./def_driver.c	/^i_read(int fd, int tm, char *buf, int buf_size)$/;"	f	file:
+i_read_errno	./def_driver.c	/^int             i_read_errno;$/;"	v
+inter_driver	./inter_driver.c	/^inter_driver(void)$/;"	f
+lock_reg	./lockreg.c	/^lock_reg(int fd, int cmd, int type, off_t offset, int whence, off_t len)$/;"	f
+lock_test	./locktest.c	/^lock_test(int fd, int type, off_t offset, int whence, off_t len)$/;"	f
+match_readin	./def_driver.c	/^match_readin(char *readin, char *str)$/;"	f
+nocr	./def_driver.c	/^	int             nocr;	\/* no carriage return *\/$/;"	m	struct:f	file:
+padding	./openssl_rsa.c	/^int	padding = RSA_PKCS1_PADDING;$/;"	v
+posix_openpt	./ptym.c	/^int posix_openpt(int oflag)$/;"	f
+posix_openpt	./ptym_bsd.c	/^int posix_openpt(int oflag)$/;"	f
+posix_openpt	./ptym_linux.c	/^int posix_openpt(int oflag)$/;"	f
+private_decrypt	./openssl_rsa.c	/^private_decrypt(char *enc_data, int data_len, char *key, char *decrypted)$/;"	f
+prompt	./def_driver.c	/^	char            prompt[BUFSIZ];$/;"	m	struct:f	file:
+ptsname	./ptym.c	/^char *ptsname(int fdm)$/;"	f
+ptsname	./ptym_bsd.c	/^char *ptsname(int fdm)$/;"	f
+ptsname	./ptym_linux.c	/^char *ptsname(int fdm)$/;"	f
+pty_fork	./pty_fork.c	/^pty_fork(int *ptrfdm, char *slave_name, int slave_namesz,$/;"	f
+ptym_open	./pty_open.c	/^ptym_open(char *pts_name, int pts_namesz)$/;"	f
+ptys_open	./pty_open.c	/^ptys_open(char *pts_name)$/;"	f
+public_encrypt	./openssl_rsa.c	/^public_encrypt(char *data, int data_len, char *key, char *encrypted)$/;"	f
+readn	./readn.c	/^readn(int fd, void *ptr, size_t n)$/;"	f
+repeat	./def_driver.c	/^	int             repeat;$/;"	m	struct:f	file:
+return_def_driver	./def_driver.c	80;"	d	file:
+return_inter_driver	./inter_driver.c	15;"	d	file:
+rm_nulls	./def_driver.c	/^rm_nulls(char *s, int c)$/;"	f	file:
+s_pipe	./s_pipe.c	/^s_pipe(int fd[2])$/;"	f
+save_termios	./tty_noncanon.c	/^static struct termios save_termios;$/;"	v	typeref:struct:termios	file:
+set_fl	./set_fl.c	/^set_fl(int fd, int flag)$/;"	f
+signal_intr	./signal_intr.c	/^signal_intr(int signo, Sigfunc * handler)$/;"	f
+signal_rest	./signal_rest.c	/^signal_rest(int signo, Sigfunc * handler)$/;"	f
+strip	./strip.c	/^strip(char buf[], char *str)$/;"	f
+strregex	./strregex.c	/^strregex(char *str1, char *str2)$/;"	f
+sys_exit	./sys_exit.c	/^sys_exit(int status)$/;"	f
+tty_atexit	./tty_noncanon.c	/^tty_atexit(void)$/;"	f
+tty_cbreak	./tty_noncanon.c	/^tty_cbreak(int fd)$/;"	f
+tty_raw	./tty_noncanon.c	/^tty_raw(int fd)$/;"	f
+tty_reset	./tty_noncanon.c	/^tty_reset(int fd)$/;"	f
+tty_termios	./tty_noncanon.c	/^tty_termios(void)$/;"	f
+ttysavefd	./tty_noncanon.c	/^static int      ttysavefd = -1;$/;"	v	file:
+ttystate	./tty_noncanon.c	/^}               ttystate = TTY_RESET;$/;"	v	typeref:enum:__anon1	file:
+unlockpt	./ptym.c	/^int unlockpt(int fdm)$/;"	f
+unlockpt	./ptym_bsd.c	/^int unlockpt(int fdm)$/;"	f
+writen	./writen.c	/^writen(int fd, void *ptr, size_t n)$/;"	f
