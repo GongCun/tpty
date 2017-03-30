@@ -13,7 +13,8 @@ CFLAGS= -qlanglvl=extc89			\
 	-qnokeyword=asm -qnocpluscmt		\
 	-D__STRICT_ANSI__			\
 	-qflag=i:i -qinfo=use:nounset:noeff	\
-	-I$(ROOT)/include -g -DDEBUG
+	-I$(ROOT)/include -g
+	##-I$(ROOT)/include -g -DDEBUG
 RANLIB=ranlib
 AR=ar
 AWK=awk
