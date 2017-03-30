@@ -9,14 +9,14 @@ tpty.1.gz: tpty.1
 	@tar -cvf - $< | gzip -c >$@
 
 tpty.man: tpty.1
-	@nroff -man $< | col -b >$@
+	@nroff -man $< 2>/dev/null | col -b >$@
 	@cp -p $@ ../
 
 tptyreplay.1.gz: tptyreplay.1
 	@tar -cvf - $< | gzip -c >$@
 
 tptyreplay.man: tptyreplay.1
-	@nroff -man $< | col -b >$@
+	@nroff -man $< 2>/dev/null | col -b >$@
 	@cp -p $@ ../
 
 install: tpty.1 tptyreplay.1

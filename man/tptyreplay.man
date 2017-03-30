@@ -1,132 +1,101 @@
+TPTYREPLAY(1)		      tptyreplay man page		 TPTYREPLAY(1)
 
 
 
-     TPTYREPLAY(1)	     1.1 (30 Mar 2017)		 TPTYREPLAY(1)
+NAME
+       tptyreplay − play back typetpty (typescript), using timing information
+
+SYNOPSIS
+       tptyreplay [options] −t timingfile −s typetpty
+
+DESCRIPTION
+       This  program  replays  a  typetpty, using timing information to ensure
+       that output happens in the same rhythm as it originally	appeared  when
+       the  tpty(1)  or  GNU/script(1) was recorded.  tptyreplay also provides
+       some subcommands for controling the player.
+
+       tptyreplay is only guaranteed to work properly if run on the same  type
+       of  terminal the typetpty was recorded on.  Otherwise, any escape char‐
+       acters in the typetpty may be interpreted differently by  the  terminal
+       to which tptyreplay is sending its output.
+
+       The timingfile which specified by −t is what tpty(1) outputs to record‐
+       file if it is run with the −t parameter.
+
+       The typetpty which specified by −s is what tpty(1) outputs  to  outfile
+       if it is run with the −o parameter.
+
+       If the −d divisor parameter is specified, it is used as a speed‐up mul‐
+       tiplier.  For example, a speed‐up of 2 makes  tptyreplay  go  twice  as
+       fast, and a speed‐up of 0.1 makes it go ten times slower than the orig‐
+       inal session.
+
+OPTIONS
+       Valid options are:
+
+       −t     file File containing tpty’s timing output.
+
+       −s     file File containing tpty’s terminal output.
+
+       −d     number Speed up the replay displaying this number of times.  The
+	      argument	is  a  floating  point	number.   It’s	called divisor
+	      because it divides the timings by this factor.
+
+       −m     number Set the maximum delay between transcript updates to  num‐
+	      ber  of seconds.	The argument is a floating point number.  This
+	      can be used to avoid long pauses in the transcript replay.
+
+       Subcommands
+	      Valid interactive subcommands are:
 
 
 
-     NAME
-	  tptyreplay - play back typetpty (typescript),	using timing
-	  information
+       SPACE  Pause/Play.
 
-     SYNOPSIS
-	  tptyreplay [options] -t timingfile -s	typetpty
+       u      Make two times faster than the current speed.
 
-     DESCRIPTION
-	  This program replays a typetpty, using timing	information to
-	  ensure that output happens in	the same rhythm	as it
-	  originally appeared when the tpty(1) or GNU/script(1)	was
-	  recorded.  tptyreplay	also provides some subcommands for
-	  controling the player.
+       d      Make two times slower than the current speed.
 
-	  tptyreplay is	only guaranteed	to work	properly if run	on the
-	  same type of terminal	the typetpty was recorded on.
-	  Otherwise, any escape	characters in the typetpty may be
-	  interpreted differently by the terminal to which tptyreplay
-	  is sending its output.
+       b      Playback one record of the timing file.
 
-	  The timingfile which specified by -t is what tpty(1) outputs
-	  to recordfile	if it is run with the -t parameter.
+       f      Fast‐forward one record of the timing file.
 
-	  The typetpty which specified by -s is	what tpty(1) outputs
-	  to outfile if	it is run with the -o parameter.
+       Any other key
+	      Resume to the original speed.
 
-	  If the -d divisor parameter is specified, it is used as a
-	  speed-up multiplier.	For example, a speed-up	of 2 makes
-	  tptyreplay go	twice as fast, and a speed-up of 0.1 makes it
-	  go ten times slower than the original	session.
-
-     OPTIONS
-	  Valid	options	are:
-
-	  -t   file File containing tpty's timing output.
-
-	  -s   file File containing tpty's terminal output.
-
-	  -d   number Speed up the replay displaying this number of
-	       times.  The argument is a floating point	number.	 It's
-	       called divisor because it divides the timings by	this
-	       factor.
-
-	  -m   number Set the maximum delay between transcript updates
-	       to number of seconds.  The argument is a	floating point
-	       number.	This can be used to avoid long pauses in the
-	       transcript replay.
-
-	  Subcommands
-	       Valid interactive subcommands are:
+       ^C     End display.
 
 
+NOTES
+       The subcommand ’b’ and ’f’ are weakly supported.  Before playback,  you
+       must pause (subcommand ’SPACE’) the replay first.
 
 
+EXAMPLE
+       Record and replay:
 
-     Page 1					    (printed 3/30/17)
+	   % tpty ‐o tpty.out ‐r tpty.tm "${SHELL:‐/usr/bin/ksh}"
+	   % ls
+	   <etc, etc>
+	   % exit
+	   <exit>
+	   % tptyreplay ‐t tpty.tm ‐s tpty.out
 
+       If the tpty session is still active,
+       you can monitor the user’s action by running:
 
-
-
-
-
-     TPTYREPLAY(1)	     1.1 (30 Mar 2017)		 TPTYREPLAY(1)
-
-
-
-	  SPACE
-	       Pause/Play.
-
-	  u    Make two	times faster than the current speed.
-
-	  d    Make two	times slower than the current speed.
-
-	  b    Playback	one record of the timing file.
-
-	  f    Fast-forward one	record of the timing file.
-
-	  Any other key
-	       Resume to the original speed.
-
-	  ^C   End display.
+	   % tptyreplay ‐t tpty.tm ‐s tpty.out ‐m0
 
 
-     NOTES
-	  The subcommand 'b' and 'f' are weakly	supported.  Before
-	  playback, you	must pause (subcommand 'SPACE')	the replay
-	  first.
+SEE ALSO
+       tpty(1)script(1)scriptreplay(1)
 
-
-     EXAMPLE
-	  Record and replay:
-
-	      %	tpty -o	tpty.out -r tpty.tm "${SHELL:-/usr/bin/ksh}"
-	      %	ls
-	      <etc, etc>
-	      %	exit
-	      <exit>
-	      %	tptyreplay -t tpty.tm -s tpty.out
-
-	  If the tpty session is still active,
-	  you can monitor the user's action by running:
-
-	      %	tptyreplay -t tpty.tm -s tpty.out -m0
-
-
-     SEE ALSO
-	  tpty(1)script(1)scriptreplay(1)
-
-     AUTHOR
-	  The tptyreplay was based on GNU/Linux	scriptreplay program.
-	  The program was re-written by	Cun Gong
-	  (gong_cun@bocmacau.com) to work on both AIX, Mac OS X	and
-	  GNU/Linux.
+AUTHOR
+       The  tptyreplay	was based on GNU/Linux scriptreplay program.  The pro‐
+       gram was re‐written by Cun Gong (gong_cun@bocmacau.com) to work on both
+       AIX, Mac OS X and GNU/Linux.
 
 
 
 
-
-
-
-
-     Page 2					    (printed 3/30/17)
-
-
-
+1.1				  30 Mar 2017			 TPTYREPLAY(1)
