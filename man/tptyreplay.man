@@ -95,12 +95,20 @@
 
 
      EXAMPLE
+	  Record and replay:
+
 	      %	tpty -o	tpty.out -r tpty.tm "${SHELL:-/usr/bin/ksh}"
 	      %	ls
 	      <etc, etc>
 	      %	exit
 	      <exit>
 	      %	tptyreplay -t tpty.tm -s tpty.out
+
+	  If the tpty session is still active,
+	  you can monitor the user's action by running:
+
+	      %	tptyreplay -t tpty.tm -s tpty.out -m0
+
 
      SEE ALSO
 	  tpty(1)script(1)scriptreplay(1)
@@ -110,14 +118,6 @@
 	  The program was re-written by	Cun Gong
 	  (gong_cun@bocmacau.com) to work on both AIX, Mac OS X	and
 	  GNU/Linux.
-
-
-
-
-
-
-
-
 
 
 

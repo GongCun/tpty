@@ -1,4 +1,4 @@
 TEMPFILES=core core.* temp.* *.out *~
 
 clean:
-	rm -rf tpty tptyreplay tpty-crypt $(TEMPFILES)
+	rm -rf tpty tptyreplay tpty-crypt vtclean $(TEMPFILES)

@@ -369,7 +369,7 @@
 	  a state machine to cleanup the escape	sequences based	on the
 	  design publied by Paul Williams. You can try the command:
 
-	      vtclean <record |	tr -cs ' \t\n' >record.clean
+	      col -b <record 2>/dev/null | vtclean >record.clean
 
 
      HISTORY

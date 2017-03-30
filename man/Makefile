@@ -1,0 +1,22 @@
+TEMPFILES=core core.* temp.* *.out *~
+
+PROGS = tpty.1.gz tptyreplay.1.gz tpty.man tptyreplay.man
+
+all: $(PROGS)
+
+tpty.1.gz: tpty.1
+	@tar -cvf - $< | gzip -c >$@
+
+tpty.man: tpty.1
+	@nroff -man $< | col -b >$@
+	@cp -p $@ ../
+
+tptyreplay.1.gz: tptyreplay.1
+	@tar -cvf - $< | gzip -c >$@
+
+tptyreplay.man: tptyreplay.1
+	@nroff -man $< | col -b >$@
+	@cp -p $@ ../
+
+clean:
+	rm -rf $(PROGS) $(TEMPFILES)

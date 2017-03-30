@@ -117,13 +117,23 @@ are weakly supported.
 Before playback, you must pause (subcommand '\fBSPACE\fP') the replay first.
 
 .SH "EXAMPLE"
+Record and replay:
 .nf
+
     % tpty -o tpty.out -r tpty.tm "${SHELL:-/usr/bin/ksh}"
     % ls
     <etc, etc>
     % exit
     <exit>
     % tptyreplay -t tpty.tm -s tpty.out
+
+.nf
+If the \fBtpty\fP session is still active,
+you can monitor the user's action by running:
+.nf
+
+    % tptyreplay -t tpty.tm -s tpty.out -m0
+
 .nf
 .SH "SEE ALSO"
 .BR tpty (1) script(1) scriptreplay(1)
