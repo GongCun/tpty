@@ -1,6 +1,6 @@
 .\" Manpage for tpty.
 .\" Contact gong_cun@bocmacau.com to correct errors or typos.
-.TH tpty 1 "30 March 2015" "1.1" "tpty man page"
+.TH tpty 1 "30 March 2017" "1.1" "tpty man page"
 .SH NAME
 \fBtpty\fP \- tpty execute the program in a terminal session of its own, use
 to control the stream through the pseudo terminal.
@@ -14,27 +14,25 @@ unbuffer the standard I/O. For example, suppose you are watching the output of
  Background-Running Job, you can disable this automatic buffering as follows:
 .nf
 
-        tpty -i \fIprogram\fP < /dev/null > file.out &
+        tpty -i \fIprogram\fP </dev/null >file.out &
 
 .fi
-
-Using the \fBtpty\fP, we can implement the \fBscript(1)\fP program as the foll
--owing shell script:
+Using the \fBtpty\fP, we can implement the \fBscript(1)\fP program as the following
+shell script:
 .nf
 
         tpty "${SHELL:-/usr/bin/ksh}" | tee typescript
-        
+
 .fi
 or
 .nf
 
         tpty -o typescript "${SHELL:-/usr/bin/ksh}"
-        
+
 .fi
-
-
-Using the \fBtpty\fP, we can "talk" to the interactive programs noninteractive
-ly like the \fBexpect(1)\fP.  The option (\fB\-d\fP) allows \fBtpty\fP to be
+Using the \fBtpty\fP, we can "talk" to the interactive programs
+noninteractively
+like the \fBexpect(1)\fP.  The option (\fB\-d\fP) allows \fBtpty\fP to be
 connected to a driver process for its input and output. The standard output of
 the driver is \fBtpty\fP's standard input and vice versa.
 .nf
@@ -46,49 +44,94 @@ the driver is \fBtpty\fP's standard input and vice versa.
 	+---------+   pipe2      +----------+         +-----------+
 
 .fi
-
 You can write the
 .I driver
 program yourself like this:
-
-\fBtpty\fP provides the option (\fB\-x\fP) for default driver, if use default 
-driver,
-you must specify the config file (\fB\-f\fP). The config file's format like:
 .nf
 
-    ExpectString%SendReply%<TptyReserveWords>
+	% cat driver.sh
+
+	while read line
+	do
+	    if [[ "$line" = *"'s New password:" ]] || \\
+	       [[ "$line" = "Enter the new password again:" ]]
+	   then
+	       echo "secret"
+	   fi
+	done
 
 .fi
-The following is an example of an config file:
+Then you can run the following command to change password noninteractively:
+.nf
+
+	% tpty -n -e -d driver.sh passwd foo
+
+.fi
+\fBtpty\fP also provides the option (\fB\-x\fP) for default driver, if use
+default driver,
+you must specify the config file (\fB\-c\fP). The config file's format like:
+.nf
+
+    ExpectString % SendReply % <TptyReserveWords>
+
+.fi
+Here is an example using the config file:
 .nf
 
 	login: % foo
 	foo's Password: % password
-	foo@host:[/]# % date "+%y%m%d"
-	foo@host:[/]# % exit
+	foo@host:[/home/foo]# % date "+%y%m%d"
+	foo@host:[/home/foo]# % exit
+
+.fi
+The field separator is '%'. Note:
+.TP \w'1)\ 'u
+1)
+If your shell prompt (\fBPS1\fP) or expect string
+is '%', 
+please be sure to leave a space before the first delimiter, like this:
+.nf
+
+	% % whoami
+
+.fi
+.B Don't
+like this
+.nf
+
+	%% whoami
+
+.fi
+.TP \w'1)\ 'u
+2)
+If your command include "%", it's no problem:
+.nf
+
+	foo@host:[/home/foo]# % date "+%D"
 
 .fi
 .PP
-The field separator is \fBthe first\fP '%'. \fBtpty\fP looks for the 
-ExpectString in the interactive program's output,
+\fBtpty\fP looks for the 
+.I ExpectString
+in the interactive program's output,
 inputs the SendReply if the pattern matched. That means:
 .nf
 
-    case Output matched:
-            ExpectString1)
-                    SendReply1; break;
-            ExpectString2)
-                    SendReply2; break;
-            ...
+	case Output matched:
+		ExpectString1)
+			puts SendReply1; break;
+		ExpectString2)
+			puts SendReply2; break;
+		...
 
 .fi
-
-The config file can use the regular expression, since if the ExpectString
-has symbol '%', you can use '.' to replace it.
-The symbols and subroutines is from \fBregex\fP. You must precede them with a 
+The config file can use the regular expression, since if the
+.I ExpectString
+has symbol '\fB%\fP', you can use '\fB.\fP' to replace it to avoid confusing
+the characters and delimiters.
+The symbols and subroutines is from \fBregex(3)\fP. You must precede them with a 
 \\ (backslash)
-if you want to match the special symbol itself. For example, \\$ matches a dol
-lar sign.
+if you want to match the special symbol itself. For example, \\$ matches a dollar sign.
 .nf
 
     login: %foo 
@@ -98,79 +141,59 @@ lar sign.
     foo@host:[/]# % exit
 
 .fi
-Note, the pattern match do not ignore the \fBBLANK\fP.
+Note, the pattern match do not ignore the \fBBLANK\f.
+.PP
 The TptyReserveWords
-is \fBNONR, REPEAT, INTERACT, ENCRYPT\fP. The 
+is \fBNONR, REPEAT, INTERACT, ENCRYPT\fP:
+.TP
 .B NONR
-means do not input the newline key (like '\\r').
-The
+means do not input the newline character ('\\r').
+.TP
 .B REPAET
-means:
 .nf
-
     while (Output matched ExpectString)
         SendReply;
-
 .fi
-The
-.B INTERACT
-means:
+.TP
+\fBINTERACT\fP (must use with \fB\-I\fP option)
 .nf
 
     if (Output matched ExpectString)
             do the rest thing manually;
-
 .fi
-.B INTERACT
-must be used with
-.B \-I
-option.
-
-Here is another sample of a config file:
-.nf
-
-    ogin: %foo
-    assword: %secret
-    .*# % cat LargeFile | more
-    --More--%j% <NONR> % <REPEAT>
-    .*# % <INTERACT>
-
-.fi
-
-The
+.TP
 .B ENCRYPT
 is added by
-.B tpty-crypt
-automatically, no need add the word manually.
+.B tpty-crypt(1)
+automatically, no need add the keyword manually.
 The
-.B tpty-crypt
+.B tpty-crypt(1)
 and
-.B tpty-keygen
+.B tpty-keygen(1)
 are used to encrypt the sensitive fields of the config file.
 You should use
-.B tpty-keygen
-to generate an RSA keypair with a 2048 bit private key
-and extract the public key from the RSA keypair in PEM format:
+.B tpty-keygen(1)
+to generate an RSA keypair with PEM format:
 .nf
 
     $ tpty-keygen ./private.pem
     Generating RSA private key, 2048 bit long modulus
-    .+++
     ...+++
-    e is 65537 (0x10001)
-    writing RSA key
     private key : ./private.pem
     public  key : ./private.pem.pub 
 
 .fi
 Then you can encode the config file with
-.B tpty-crypt
+.B tpty-crypt(1)
 The syntax is
 .nf
 
-    \fBtpty-crypt\fP FileName SegmentName PublicKey StoreFile
+    \fBtpty-crypt\fP <FileName> <SegmentName> <PublicKey> <StoreFile>
 
 .fi
+The
+.I FileName
+is the configuration file (\fB-c\fP <file>).
 The
 .I SegmentName
 is which segment you want to encode, like "password" etc.
@@ -185,7 +208,7 @@ For example, The original file is
     .*# % exit
 
 .fi
-After executing the following command:
+After executed the following command:
 .nf
 
     $ tpty-crypt config "assword:" private.pem.pub config.key
@@ -199,38 +222,44 @@ The config file will become:
     .# % exit
 
 .fi
-The encrypted key is stored in config.key.
-
-When the config file is ready, you can execute the following command:
+The encrypted key is stored in config.key.  After the file is encrypted, execute:
 .nf
 
-        tpty -x -f \fIconfig\fP telnet remote-host
+    $ tpty -x -c config -p private.pem -k config.key \\
+        telnet remote-host
 
 .fi
-
-If the file is encrypted, execute:
+.PP
+Here is another sample of config file:
 .nf
 
-        tpty -x -f \fIconfig\fP -p private.pem -k config.key telnet remote-hos
-t
+    ogin: %foo
+    assword: %secret
+    .*# % cat LargeFile | more
+    --More--% f % <NONR> % <REPEAT>
+    .*# % <INTERACT>
 
 .fi
+It means enter the name 'foo' when the login prompt appears, enter the
+password 'secret' when the password prompt appears, displays the LargeFile
+contents with \fBmore(1)\fP, moves the pages until the end of the file, then
+do the rest thing manually.
 
-Because the 
-.B tpty
-creates a session with a pseudo terminal,
-even you can write the driver program yourself to talk to the pseudo terminal.
-.nf
-
-        tpty -d \fIdriver\fP program [ args ... ]
-
-.fi
 
 .SH OPTIONS
 Valid options are:
 .TP
 \fB\-a\fP \fIauditfile\fP
-File containing all input from stdin, including the stty in noecho mode.
+File containing all input from stdin, and the time when the command were
+executed. You can run the command:
+.nf
+
+    $ col -b <auditfile >auditfile.fix 2>&1
+
+.fi
+to cleanup the backspace, or run the
+.B vtclean(1)
+to cleanup all control characters.
 .TP
 \fB\-d\fP \fIdriver\fP
 Specifies the driver program for stdin/stdout.
@@ -238,34 +267,35 @@ Specifies the driver program for stdin/stdout.
 \fB\-e\fP
 Does not echo characters for slave pty's line discipline.
 .TP
-\fB\-f\fP \fIconfig\fP
-Specifies the config file for default driver, must use \fB\-f\fP and \fB\-x\fP
+\fB\-c\fP \fIconfig\fP
+Specifies the config file with default driver, must use \fB\-c\fP and \fB\-x\fP
  flags together.
 .TP
 \fB\-i\fP
 Ignore EOF on standard input.
 .TP
 \fB\-k\fP \fIEncryptedKey\fP
-Specifies the file which save the encrypted segment of the config file.
+Specifies the file which save the encrypted segment of the config file. Only
+support the PEM key format with 2048 bits now.
 .TP
 \fB\-n\fP
-No interactive mode.
+No interactive mode, will not initial the window size and termios.
 .TP
 \fB\-o\fP \fIoutfile\fP
-Designates the file to be used for the program output.
+Designates the file to be used for record the program's input and output.
 .TP
 \fB\-p\fP \fIRSAPrivateKey\fP
 Specifies the RSA private key to decrypt the config file.
 .TP
-\fB\-r\fP \fIrecordfile\fP
-Output timing data to \fIrecordfile\fP.
+\fB\-t\fP \fITimingFile\fP
+Output timing data to \fITimingFile\fP.
 This data contains two fields, separated by a space.
 The first field indicates how much time elapsed since the previous output.
 The second field indicates how many characters were output this time.
 This information can be used to replay outfile (-o) with realistic typing and 
 output delays.
 .TP
-\fB\-t\fP \fItimeout\fP
+\fB\-T\fP \fItimeout\fP
 If after timeout, none of interactive program's output have been seen, \fBtpty
 \fP
 will exit. If you don't specify the \fB-x\fP option,
@@ -281,9 +311,8 @@ Verbose mode. It only displays the slave pty's device name, not is very helpfu
 l for debugging.
 .TP
 \fB\-x\fP
-Choose default driver. Must use \fB\-f\fP and \fB\-x\fP flags together, it wil
-l interpret the
-config file, drive interactive programs in noninteractive modes.
+Choose default driver. Must use \fB\-c\fP and \fB\-x\fP flags together, it will
+interpret the config file, drive interactive programs in noninteractive modes.
 .TP
 \fB\-X\fP
 Redirect output to /dev/null if use the default driver.
@@ -294,7 +323,7 @@ If you don't want to completely automate a task with a driver
 some of it and then do the rest manually.
 For example, if the
 .I config's
-(\fB\-f\fP) content is:
+(\fB\-c\fP) content is:
 .nf
 
         assword: %TopSecret
@@ -304,10 +333,10 @@ For example, if the
 When execute:
 .nf
 
-	tpty -I -x -f \fIconfig\fP ssh remote-host
+	tpty -I -x -c \fIconfig\fP ssh remote-host
 
 .fi
-Now consider doing this manually.
+It means after login the shell automatically, do the rest thing manually.
 
 .SH NOTES
 Certain interactive commands, such as
@@ -334,16 +363,24 @@ option,
 it will place
 .I everything
 in the output file, including linefeeds and backspaces.  This is not what the
-naive user expects.
+naive user expects. But, you can use some tools to eliminate the garbage
+characters, e.g.
+.B vtclean(1)
+using a state machine to cleanup the escape sequences based on the design
+publied by Paul Williams. You can try the command:
+.nf
 
+    vtclean <record | tr -cs ' \\t\\n' >record.clean
+
+.fi
 .SH HISTORY
 .B tpty
 The prototype of
 .B tpty
 was 
 .B pty
-what was written by W.Richard Stevens for APUE.
-Gong Cun implemented the default driver for interactive programs 
+program written by W.Richard Stevens for APUE.
+Cun Gong implemented the default driver for interactive programs 
 with other features, was inspired by 
 .B expect(1)
 and GNU/Linux
@@ -351,14 +388,10 @@ and GNU/Linux
 utility.
 The
 .B tpty
-worked on AIX, GNU/Linux and MacOSX.
-
+worked on AIX, GNU/Linux and Mac OS X.
 .SH SEE ALSO
 expect(1), script(1), tptyreplay(1), tty(1), pty(5), regex(3)
-
 .SH PROBLEMS
 Problems with
 .B tpty
-should be reported to 
-<gongcunjust@gmail.com>
-
+should be reported to <gong_cun@bocmacau.com>
