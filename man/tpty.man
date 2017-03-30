@@ -289,10 +289,11 @@ BUGS
 
 
 HISTORY
-       tpty The prototype of tpty was pty program written by W.Richard Stevens
-       for APUE.  Cun Gong implemented the default driver for interactive pro‐
-       grams  with  other  features,  was  inspired by expect(1) and GNU/Linux
-       script(1) utility.  The tpty worked on AIX, GNU/Linux and Mac OS X.
+       tpty  The  prototype  of  tpty  was  pty  program written by W. Richard
+       Stevens for APUE.  Cun Gong implemented the default driver for interac‐
+       tive  programs  with  other  features,  was  inspired  by expect(1) and
+       GNU/Linux script(1) utility.  The tpty worked on AIX, GNU/Linux and Mac
+       OS X.
 
 SEE ALSO
        expect(1), script(1), tptyreplay(1), tty(1), pty(5), regex(3)

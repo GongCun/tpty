@@ -41,6 +41,14 @@ Table of Contents:
 2.1	Tptyreplay manual
 
 3.0	Copyright
+
+4.0	Bugs or FAQ
+4.1	When convert man file to plain text on MacOSX/BSD OS maybe occur error
+	like '.../font/devascii/.:0: error: missing charset command'.
+4.2	Very few chances, when tpty program exited, the terminal doesn't
+	respond any keys.
+4.3	Very few chances, when tptyreplay program was interrupted, the
+	terminal will change color or doesn't echo back.
 ______________________________________________________________________________________________
 
 
@@ -381,7 +389,7 @@ You should install the ruby first, then
 
 	       will exit. If you don't specify the -x option, the
 	       timeout will be ignored.	Default	timeout	is 10 seconds.
-	       If timeou t < 0,	will wait forever.
+	       If timeout < 0,	will wait forever.
 
 	  -u   Unlink the encrypted key	file (specified	by -k option).
 
@@ -637,3 +645,35 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
 LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
+
+
+4.0	Bugs
+
+4.1	When convert man file to plain text on MacOSX/BSD OS maybe occur error
+	like '.../font/devascii/.:0: error: missing charset command'.
+
+	This maybe the groff's bug, can ignore it or run the 'make -k' option 
+	explicitly.
+
+4.2	Very few chances, when tpty program exited, the terminal doesn't
+	respond any keys.
+
+	This may happen when some terminal processing program run in tpty,
+	such as more(1), causing the terminal I/O disorder, you can enter the
+	following sequence of characters to reset terminal:
+
+	    <Ctrl-J>stty sane<Ctrl-J>
+
+4.3	Very few chances, when tptyreplay program was interrupted, the
+	terminal will change behavior or doesn't echo back.
+
+	I have encountered this case when I'm playing the AIX topas record and
+	interrupted from tptyreplay, I think this is the same reason as 4.2
+	section, I haven't find the reason, but could run the following
+	command to fix:
+
+	    % stty echo
+	
+	or
+
+	    % tput sgr0
