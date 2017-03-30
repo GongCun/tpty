@@ -1,19 +1,636 @@
-Read the file called COPYRIGHT.
 
-On AIX, type "./config.sh && gmake".
-On other platforms, type "./config.sh && make" (as long as this is GNU make).
+	README (every thing you want to known about tpty)
 
-Or if you want to alter the compiler, you can run
-% make CC=foobar
 
-Install detail see the file called INSTALL.
+**************************************************************
+| The latest release of tpty is always available via GitLab. |
+|                                                            |
+| Please, send all your reports, patches and suggestions to  |
+| <gong_cun@bocmacau.com>, developers are welcome.           |
+|                                                            |
+| Cun Gong                                                   |
+| gong_cun@bocmacau.com                                      |
+**************************************************************
 
-Usage:
-See tpty(1), tptyreplay(1) manual and samples under sample directory.
+______________________________________________________________________________________________
 
-Please, send all your reports, patches and suggestions to <gong_cun@bocmacau.com>,
-Developers are welcome.
+Quick Start
 
-Cun Gong
-gong_cun@bocmacau.com
+0.0	Install
 
+	On AIX, type "./config.sh && gmake".
+	On other platforms, type "./config.sh && make" (as long as this is GNU make).
+
+	Install detail please see the 1.0 INSTALL section
+
+0.1	Usage
+
+	See tpty(1), tptyreplay(1) manual and samples under sample directory.
+
+______________________________________________________________________________________________
+
+Table of Contents:
+
+1.0	Install the tpty* program
+1.1	Install the vtlean program
+
+2.0	Tpty manual
+2.1	Tptyreplay manual
+
+3.0	Copyright
+______________________________________________________________________________________________
+
+
+1.0	Install the tpty* program
+
+Run the following command to install
+
+    $ ./config.sh
+    $ make
+    $ make install
+
+If the config.sh can't find the OpenSSL library, will not install the tpty-crypt
+program. If you have installed the OpenSSL library, please setup the environment 
+variable:
+
+    $ export LDFLAGS=-L<path>
+    $ export CPPFLAGS=-I<path>
+    $ ./config.sh
+    $ make -e
+    $ make install
+
+You also can alter the compiler:
+
+    $ make CC=foo
+
+
+1.1	Install the vtclean program
+
+You should install the ruby first, then
+
+    $ cd vtparse
+    $ make vtclean
+
+
+
+2.0	Tpty manual
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+     NAME
+	  tpty - tpty execute the program in a terminal	session	of its
+	  own, use to control the stream through the pseudo terminal.
+
+     SYNOPSIS
+	  tpty [ -x -c config ]	[ -T timeout -d	driver ] [ -einuvXI -o
+	  outfile -t timingfile	-a auditfile -p	RSAPrivateKey -k
+	  EncrypedKey ]	program	[ args ... ]
+
+     DESCRIPTION
+	  tpty based on	Mr. Stevens's pty program, and its first
+	  function is to add a pseudo-terminal between the input and
+	  ouput	of the program to unbuffer the standard	I/O. For
+	  example, suppose you are watching the	output of
+	   Background-Running Job, you can disable this	automatic
+	  buffering as follows:
+
+		  tpty -i program </dev/null >file.out &
+
+	  Using	the tpty, we can implement the script(1) program as
+	  the following	shell script:
+
+		  tpty "${SHELL:-/usr/bin/ksh}"	| tee typescript
+
+	  or
+
+		  tpty -o typescript "${SHELL:-/usr/bin/ksh}"
+
+	  Using	the tpty, we can "talk"	to the interactive programs
+	  noninteractively like	the expect(1).	The option (-d)	allows
+	  tpty to be connected to a driver process for its input and
+	  output. The standard output of the driver is tpty's standard
+	  input	and vice versa.
+
+								coprocess
+	       +---------+   pipe1	+----------+	     +-----------+
+	       | driving |------------->| pseudo   |-------->|stdin	 |
+	       | program |<-------------| terminal |<--------|stdout	 |
+	       +---------+   pipe2	+----------+	     +-----------+
+
+	  You can write	the driver program yourself like this:
+
+	       % cat driver.sh
+
+	       while read line
+	       do
+		   if [[ "$line" = *"'s	New password:" ]] || \
+		      [[ "$line" = "Enter the new password again:" ]]
+		  then
+		      echo "secret"
+		  fi
+	       done
+
+
+
+     Page 1					    (printed 3/30/17)
+
+
+
+
+
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+	  Then you can run the following command to change password
+	  noninteractively:
+
+	       % tpty -n -e -d driver.sh passwd	foo
+
+	  tpty also provides the option	(-x) for default driver, if
+	  use default driver, you must specify the config file (-c).
+	  The config file's format like:
+
+	      ExpectString % SendReply % <TptyReserveWords>
+
+	  Here is an example using the config file:
+
+	       login: %	foo
+	       foo's Password: % password
+	       foo@host:[/home/foo]# % date "+%y%m%d"
+	       foo@host:[/home/foo]# % exit
+
+	  The field separator is '%'. Note:
+
+	  1) If	your shell prompt (PS1)	or expect string is '%',
+	     please be sure to leave a space before the	first
+	     delimiter,	like this:
+
+		  % % whoami
+
+	     Don't like	this
+
+		  %% whoami
+
+
+	  2) If	your command include "%", it's no problem:
+
+		  foo@host:[/home/foo]#	% date "+%D"
+
+
+	  tpty looks for the ExpectString in the interactive program's
+	  output, inputs the SendReply if the pattern matched. That
+	  means:
+
+	       case Output matched:
+		    ExpectString1)
+			 puts SendReply1; break;
+		    ExpectString2)
+			 puts SendReply2; break;
+		    ...
+
+	  The config file can use the regular expression, since	if the
+	  ExpectString has symbol '%', you can use '.' to replace it
+	  to avoid confusing the characters and	delimiters.  The
+	  symbols and subroutines is from regex(3). You	must precede
+	  them with a \	(backslash) if you want	to match the special
+
+
+
+     Page 2					    (printed 3/30/17)
+
+
+
+
+
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+	  symbol itself. For example, \$ matches a dollar sign.
+
+	      login: %foo
+	      foo's Password: %password
+	      foo@host:[/]# % shell-cmd
+	      .*\[.*\].*% shell-cmd
+	      foo@host:[/]# % exit
+
+	  Note,	the pattern match do not ignore	the BLANK
+
+	  The TptyReserveWords is NONR,	REPEAT,	INTERACT, ENCRYPT:
+
+	  NONR means do	not input the newline character	('\r').
+
+	  REPAET
+		   while (Output matched ExpectString)
+		       SendReply;
+
+	  INTERACT (must use with -I option)
+
+		   if (Output matched ExpectString)
+			   do the rest thing manually;
+
+	  ENCRYPT
+	       is added	by tpty-crypt(1) automatically,	no need	add
+	       the keyword manually.  The tpty-crypt(1)	and tpty-
+	       keygen(1) are used to encrypt the sensitive fields of
+	       the config file.	 You should use	tpty-keygen(1) to
+	       generate	an RSA keypair with PEM	format:
+
+		   $ tpty-keygen ./private.pem
+		   Generating RSA private key, 2048 bit	long modulus
+		   ...+++
+		   private key : ./private.pem
+		   public  key : ./private.pem.pub
+
+	       Then you	can encode the config file with	tpty-crypt(1)
+	       The syntax is
+
+		   tpty-crypt <FileName> <SegmentName> <PublicKey> <StoreFile>
+
+	       The FileName is the configuration file (-c <file>).
+	       The SegmentName is which	segment	you want to encode,
+	       like "password" etc.  The StoreFile is the file which
+	       is used to stored the encrypted segment.	 For example,
+	       The original file is
+
+		   assword: % secret
+		   .*# % whoami
+		   .*# % exit
+
+	       After executed the following command:
+
+
+
+     Page 3					    (printed 3/30/17)
+
+
+
+
+
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+		   $ tpty-crypt	config "assword:" private.pem.pub config.key
+
+	       The config file will become:
+
+		   assword: %<ENCRYPT>
+		   .# %	whoami
+		   .# %	exit
+
+	       The encrypted key is stored in config.key.  After the
+	       file is encrypted, execute:
+
+		   $ tpty -x -c	config -p private.pem -k config.key \
+		       telnet remote-host
+
+
+	  Here is another sample of config file:
+
+	      ogin: %foo
+	      assword: %secret
+	      .*# % cat	LargeFile | more
+	      --More--%	f % <NONR> % <REPEAT>
+	      .*# % <INTERACT>
+
+	  It means enter the name 'foo'	when the login prompt appears,
+	  enter	the password 'secret' when the password	prompt
+	  appears, displays the	LargeFile contents with	more(1), moves
+	  the pages until the end of the file, then do the rest	thing
+	  manually.
+
+
+
+     OPTIONS
+	  Valid	options	are:
+
+	  -a auditfile
+	       File containing all input from stdin, and the time when
+	       the command were	executed. You can run the command:
+
+		   $ col -b <auditfile >auditfile.fix 2>&1
+
+	       to cleanup the backspace, or run	the vtclean(1) to
+	       cleanup all control characters.
+
+	  -d driver
+	       Specifies the driver program for	stdin/stdout.
+
+	  -e   Does not	echo characters	for slave pty's	line
+	       discipline.
+
+	  -c config
+	       Specifies the config file with default driver, must use
+	       -c and -x
+
+
+
+     Page 4					    (printed 3/30/17)
+
+
+
+
+
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+		flags together.
+
+	  -i   Ignore EOF on standard input.
+
+	  -k EncryptedKey
+	       Specifies the file which	save the encrypted segment of
+	       the config file.	Only support the PEM key format	with
+	       2048 bits now.
+
+	  -n   No interactive mode, will not initial the window	size
+	       and termios.
+
+	  -o outfile
+	       Designates the file to be used for record the program's
+	       input and output.
+
+	  -p RSAPrivateKey
+	       Specifies the RSA private key to	decrypt	the config
+	       file.
+
+	  -t TimingFile
+	       Output timing data to TimingFile.  This data contains
+	       two fields, separated by	a space.  The first field
+	       indicates how much time elapsed since the previous
+	       output.	The second field indicates how many characters
+	       were output this	time.  This information	can be used to
+	       replay outfile (-o) with	realistic typing and output
+	       delays.
+
+	  -T timeout
+	       If after	timeout, none of interactive program's output
+	       have been seen, tpty
+
+	       will exit. If you don't specify the -x option, the
+	       timeout will be ignored.	Default	timeout	is 10 seconds.
+	       If timeou t < 0,	will wait forever.
+
+	  -u   Unlink the encrypted key	file (specified	by -k option).
+
+	  -v   Verbose mode. It	only displays the slave	pty's device
+	       name, not is very helpfu	l for debugging.
+
+	  -x   Choose default driver. Must use -c and -x flags
+	       together, it will interpret the config file, drive
+	       interactive programs in noninteractive modes.
+
+	  -X   Redirect	output to /dev/null if use the default driver.
+
+	  -I   If you don't want to completely automate	a task with a
+	       driver (-d or -x), the -I option	is to automate some of
+	       it and then do the rest manually.  For example, if the
+	       config's	(-c) content is:
+
+
+
+     Page 5					    (printed 3/30/17)
+
+
+
+
+
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+		       assword:	%TopSecret
+		       .*# % <INTERACT>
+
+	       When execute:
+
+		    tpty -I -x -c config ssh remote-host
+
+	       It means	after login the	shell automatically, do	the
+	       rest thing manually.
+
+
+     NOTES
+	  Certain interactive commands,	such as	vi(1), create garbage
+	  in the outfile (-o).	tpty works best	with commands that do
+	  not manipulate the screen, the results are meant to emulate
+	  a hardcopy terminal.
+
+
+     Exit Status
+	  This command returns the following exit values:
+
+	  0    Successful completion.
+
+	  >0   An error	occurred.
+
+
+     BUGS
+	  If tpty with -o option, it will place	everything in the
+	  output file, including linefeeds and backspaces.  This is
+	  not what the naive user expects. But,	you can	use some tools
+	  to eliminate the garbage characters, e.g.  vtclean(1)	using
+	  a state machine to cleanup the escape	sequences based	on the
+	  design publied by Paul Williams. You can try the command:
+
+	      col -b <record 2>/dev/null | vtclean >record.clean
+
+
+     HISTORY
+	  tpty The prototype of	tpty was pty program written by
+	  W.Richard Stevens for	APUE.  Cun Gong	implemented the
+	  default driver for interactive programs with other features,
+	  was inspired by expect(1) and	GNU/Linux script(1) utility.
+	  The tpty worked on AIX, GNU/Linux and	Mac OS X.
+
+     SEE ALSO
+	  expect(1), script(1),	tptyreplay(1), tty(1), pty(5),
+	  regex(3)
+
+     PROBLEMS
+	  Problems with	tpty should be reported	to
+	  <gong_cun@bocmacau.com>
+
+
+
+
+     Page 6					    (printed 3/30/17)
+
+
+2.1	Tptyreplay manual
+
+     TPTYREPLAY(1)	     1.1 (30 Mar 2017)		 TPTYREPLAY(1)
+
+
+
+     NAME
+	  tptyreplay - play back typetpty (typescript),	using timing
+	  information
+
+     SYNOPSIS
+	  tptyreplay [options] -t timingfile -s	typetpty
+
+     DESCRIPTION
+	  This program replays a typetpty, using timing	information to
+	  ensure that output happens in	the same rhythm	as it
+	  originally appeared when the tpty(1) or GNU/script(1)	was
+	  recorded.  tptyreplay	also provides some subcommands for
+	  controling the player.
+
+	  tptyreplay is	only guaranteed	to work	properly if run	on the
+	  same type of terminal	the typetpty was recorded on.
+	  Otherwise, any escape	characters in the typetpty may be
+	  interpreted differently by the terminal to which tptyreplay
+	  is sending its output.
+
+	  The timingfile which specified by -t is what tpty(1) outputs
+	  to recordfile	if it is run with the -t parameter.
+
+	  The typetpty which specified by -s is	what tpty(1) outputs
+	  to outfile if	it is run with the -o parameter.
+
+	  If the -d divisor parameter is specified, it is used as a
+	  speed-up multiplier.	For example, a speed-up	of 2 makes
+	  tptyreplay go	twice as fast, and a speed-up of 0.1 makes it
+	  go ten times slower than the original	session.
+
+     OPTIONS
+	  Valid	options	are:
+
+	  -t   file File containing tpty's timing output.
+
+	  -s   file File containing tpty's terminal output.
+
+	  -d   number Speed up the replay displaying this number of
+	       times.  The argument is a floating point	number.	 It's
+	       called divisor because it divides the timings by	this
+	       factor.
+
+	  -m   number Set the maximum delay between transcript updates
+	       to number of seconds.  The argument is a	floating point
+	       number.	This can be used to avoid long pauses in the
+	       transcript replay.
+
+	  Subcommands
+	       Valid interactive subcommands are:
+
+
+
+
+
+     Page 1					    (printed 3/30/17)
+
+
+
+
+
+
+     TPTYREPLAY(1)	     1.1 (30 Mar 2017)		 TPTYREPLAY(1)
+
+
+
+	  SPACE
+	       Pause/Play.
+
+	  u    Make two	times faster than the current speed.
+
+	  d    Make two	times slower than the current speed.
+
+	  b    Playback	one record of the timing file.
+
+	  f    Fast-forward one	record of the timing file.
+
+	  Any other key
+	       Resume to the original speed.
+
+	  ^C   End display.
+
+
+     NOTES
+	  The subcommand 'b' and 'f' are weakly	supported.  Before
+	  playback, you	must pause (subcommand 'SPACE')	the replay
+	  first.
+
+
+     EXAMPLE
+	  Record and replay:
+
+	      %	tpty -o	tpty.out -r tpty.tm "${SHELL:-/usr/bin/ksh}"
+	      %	ls
+	      <etc, etc>
+	      %	exit
+	      <exit>
+	      %	tptyreplay -t tpty.tm -s tpty.out
+
+	  If the tpty session is still active,
+	  you can monitor the user's action by running:
+
+	      %	tptyreplay -t tpty.tm -s tpty.out -m0
+
+
+     SEE ALSO
+	  tpty(1)script(1)scriptreplay(1)
+
+     AUTHOR
+	  The tptyreplay was based on GNU/Linux	scriptreplay program.
+	  The program was re-written by	Cun Gong
+	  (gong_cun@bocmacau.com) to work on both AIX, Mac OS X	and
+	  GNU/Linux.
+
+
+
+
+
+
+
+
+     Page 2					    (printed 3/30/17)
+
+
+3.0	Copyright
+
+The MIT License (MIT)
+
+Copyright (C) 2015,2016,2017 Cun Gong
+
+tpty, tptyreplay, tpty-crypt were written by Cun Gong. 
+
+The tpty was based on the pty program: Copyright (C) W. Richard Stevens,
+and was inspired by expect program: Copyright (C) Don Libes.
+The tptyreplay was based on the GNU/Linux scriptreplay(1) program.
+The tpty-crypt used to encrypt password field, refer some code from internet.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+   notice immediately at the beginning of the file, without modification,
+   this list of conditions, and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. The name of the author may not be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
