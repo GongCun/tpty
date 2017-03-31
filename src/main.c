@@ -66,6 +66,8 @@ sig_winch(int);
 static void 
 sig_alrm(int);
 
+static void sys_reset(void);
+
 
 int             fdm;
 char           *pathconfig;
@@ -213,16 +215,21 @@ main(int argc, char **argv)
 #define __BUFLEN strlen(buf)
 	snprintf(buf, sizeof(buf), "TPTY started on %s\n", gettime());
 
-	if (interactive) {	/* fetch current termios and window size */
-		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
-			err_sys("TIOCGWINSZ error");
+	ret = ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size);
+	if (interactive && ret < 0) {
+		err_sys("TIOCGWINSZ error");
+	}
+	if (ret != -1) {
 		buf[__BUFLEN-1] = '\0'; /* delete '\n' */
 		snprintf(buf + __BUFLEN, sizeof(buf) - __BUFLEN, " (%d rows, %d columns)\n",
 				size.ws_row, size.ws_col);
-		if (!zeroflg) {
+		if (!zeroflg && interactive) {
 			if (writen(STDERR_FILENO, buf, __BUFLEN) != __BUFLEN)
 				err_sys("writen() error");
 		}
+	}
+
+	if (interactive) {	/* fetch current termios and window size */
 		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
 			err_sys("tcgetattr error on stdin");
 		pid = pty_fork(&fdm, slave_name, sizeof(slave_name),
@@ -241,6 +248,7 @@ main(int argc, char **argv)
 			err_sys("can't execute: %s", argv[optind]);
 	}
 	/* parent continue... */
+	pid = getpid();
 	if (outputfd >= 0) {
 		if (writen(outputfd, buf, __BUFLEN) != __BUFLEN)
 			err_sys("writen() error");
@@ -306,7 +314,9 @@ main(int argc, char **argv)
 								 * mode */
 		ret |= sys_exit(status);
 
-	if (childpid != getpid()) { /* parent process exit */
+	if (pid == getpid()) { /* parent process exit */
+		if (atexit(sys_reset) < 0)
+			err_sys("atexit sys_reset() error");
 		if (interactive) {
 			snprintf(buf, sizeof(buf), "TPTY done on %s\n", gettime());
 			if (!zeroflg) {
@@ -372,5 +382,14 @@ static void
 sig_alrm(int signo)
 {
 	siglongjmp(jmpbuf, 1);	/* jump back to main, and exit */
+}
+
+static void sys_reset(void)
+{
+	/*
+ 	 * Reset the terminal anyway.
+	 */
+	system("stty sane 2>/dev/null");
+	system("tput sgr0 2>/dev/null");
 }
 

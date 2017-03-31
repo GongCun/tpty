@@ -61,6 +61,14 @@ loop(int ptym, int ignoreeof)
 		if (atexit(close_auditfd) < 0)
 			err_sys("atexit close_auditfd");
 
+#ifdef SOLARIS
+	/*
+	 * Solaris need try to setup raw mode again, ignore error
+	 * if child process. (I don't know why.)
+	 */
+	tty_raw(STDIN_FILENO);
+#endif
+
 	for (;;) {
 		FD_ZERO(&rset);
 		FD_SET(ptym, &rset);

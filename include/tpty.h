@@ -28,7 +28,7 @@
 #include <signal.h>
 #include <grp.h>
 
-#ifdef AIX
+#if defined(AIX) || defined(SOLARIS)
 #include <stropts.h>
 #endif
 
