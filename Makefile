@@ -1,7 +1,9 @@
 DIRS = lib src
 RUBY = $(shell type ruby 2>&1)
 ifeq (,$(findstring not found,$(RUBY)))
+ifneq (,$(RUBY))
 	DIRS += vtparse
+endif
 endif
 
 all:
