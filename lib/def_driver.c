@@ -180,9 +180,8 @@ cleanup:
 	fclose(fp);
 	free(readin);
 	if (!manflg || (manflg && return_val != EXP_EOF)) {
-#ifdef DEBUG
-		fprintf(stderr, "manflg=%d, return_val=%d\n", manflg, return_val);
-#endif
+		if (verbose)
+			fprintf(stderr, "default driver return %d\n", return_val);
 		return return_val;
 	}
 
@@ -221,8 +220,11 @@ cleanup:
 
 		if (FD_ISSET(STDIN_FILENO, &rset)) {
 			len = read(STDIN_FILENO, buf, MAXLINE);
-			if (len <= 0)
+			if (len < 0) {
 				return EXP_ERRNO;
+			} else if (len == 0) {
+				return EXP_EOF;
+			}
 			if (writen(tty, buf, len) != len)
 				return EXP_ERRNO;
 		}
@@ -283,6 +285,9 @@ start:
 	}
 	if (FD_ISSET(STDIN_FILENO, &rset)) {
 		cc = read(STDIN_FILENO, buf, buf_size);
+#ifdef DEBUG
+		fprintf(stderr, "i_read() cc = %d\n", cc);
+#endif
 		if (cc < 0)
 			err_sys("read error");
 		if (cc == 0)

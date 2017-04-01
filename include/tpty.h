@@ -132,6 +132,7 @@ extern int      tty;
 extern FILE    *fdbg;
 extern int      rmflg;
 extern pid_t	child; /* default driver's child process */
+extern int	verbose;
 
 int
 strregex(char *, char *);

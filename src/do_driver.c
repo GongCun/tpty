@@ -63,6 +63,12 @@ void do_driver (int (*f_driver)(void))
 			exit(ret);
 		}
 	}
+	/*
+ 	 * Parent process continue...
+	 */
+	if (verbose)
+		fprintf(stderr, "do_driver() fork child process %ld\n", (long)child);
+
 	close(pipe[0]);		/* parent */
 	/* leave stderr for parent alone */
 	if (dup2(pipe[1], STDIN_FILENO) != STDIN_FILENO)

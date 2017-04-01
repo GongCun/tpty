@@ -84,6 +84,7 @@ int             status;
 int             ret;
 int		interactive;
 int		savetty = -1;
+int		verbose = 0;
 
 static struct termios save_termios;
 static void _tty_reset(void);
@@ -91,7 +92,7 @@ static void _tty_reset(void);
 int
 main(int argc, char **argv)
 {
-	int             c, ignoreeof, noecho, verbose, defdriver;
+	int             c, ignoreeof, noecho, defdriver;
 	pid_t           pid;
 	char            slave_name[20];
 	struct termios  orig_termios;
@@ -104,7 +105,6 @@ main(int argc, char **argv)
 	interactive = isatty(STDIN_FILENO);
 	ignoreeof = 0;
 	noecho = 0;
-	verbose = 0;
 	defdriver = 0;
 
 	opterr = 0;		/* don't want getopt() writing to stderr */
@@ -258,6 +258,8 @@ main(int argc, char **argv)
 			err_sys("can't execute: %s", argv[optind]);
 	}
 	/* parent continue... */
+	if (verbose)
+		fprintf(stderr, "pty_fork() child process %ld\n", (long)pid);
 
 	if (outputfd >= 0) {
 		if (writen(outputfd, buf, __BUFLEN) != __BUFLEN)
@@ -290,23 +292,33 @@ main(int argc, char **argv)
 	loop(fdm, ignoreeof);	/* copies stdin -> ptym, ptym -> stdout */
 
 	/*
- 	 * May be infinite wait for all the child process to exit,
-	 * so we need to kill the child process and ignore the result.
+ 	 * Wait for all the child process to exit.
+	 * If timed out, it's possiba to wait the execvp() process
+	 * indefinitely, so kill the process and ignore the result.
 	 */
-	ret = 0;
-	if (pid != 0)
+	if (kill(pid, 0) == 0) {
 		kill(pid, SIGTERM);
-	if (child != 0)
-		kill(child, SIGTERM);
-	while (1) {
-		if (wait(&status) < 0) {
-			if (errno == EINTR) 
+		if (verbose)
+			fprintf(stderr, "kill SIGTERM to %ld\n", (long)pid);
+	}
+	/*
+ 	 * Wait WNOHANG to avoid waiting indefinitely if the process
+	 * ignore the SIGTERM.
+	 */
+	while (waitpid(pid, NULL, WNOHANG) > 0)
+		;
+
+	while ((pid = wait(&status)) != child) {
+		if (pid < 0) {
+			if (errno == EINTR)
 				continue;
-			if (errno == ECHILD)
+			else if (errno == ECHILD)
 				break;
-			ret |= sys_exit(status);
+			else
+				err_sys("wait() error");
 		}
 	}
+	ret = sys_exit(status);
 
 	if (interactive) {
 		snprintf(buf, sizeof(buf), "TPTY done on %s\n", gettime());
