@@ -72,7 +72,12 @@ pty_fork(int *ptrfdm, char *slave_name, int slave_namesz,
 		if ((fds = ptys_open(pts_name)) < 0)
 			err_sys("can't open slave pty");
 		close(fdm);	/* all done with master in child */
-#ifdef TIOCSCTTY
+#if defined(TIOCSCTTY) && !defined(SOLARIS)
+		/*
+		 * TIOCSCTTY is the BSD way to acquire a controlling terminal,
+		 * Linux also support this option.
+		 */
+
 		if (ioctl(fds, TIOCSCTTY, (char *)0) < 0)
 			err_sys("ioctl() TIOCSCTTY error");
 #endif

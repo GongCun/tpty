@@ -1,5 +1,5 @@
 ROOT=..
-PLATFORM=$(shell $(ROOT)/systype.sh | tr 'a-z' 'A-Z')
+PLATFORM=$(shell $(ROOT)/systype.sh | tr '[:lower:]' '[:upper:]')
 EXTRALIBS=$(shell $(ROOT)/config.sh)
 ifneq (,$(findstring xlc,$(shell which $(CC) 2>/dev/null)))
 include $(ROOT)/Make.defines.xlc
@@ -44,6 +44,6 @@ install: $(PROGS)
 	done
 
 clean:
-	rm -f $(PROGS) $(TEMPFILES) *.o
+	rm -f $(PROGS) $(TEMPFILES) *.o tpty-crypt
 
 include $(ROOT)/Make.libtpty.inc

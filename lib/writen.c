@@ -23,10 +23,11 @@
  *
  */
 #include "tpty.h"
+
 ssize_t 
 writen(int fd, void *ptr, size_t n)
 {
-	size_t		nleft;
+	ssize_t		nleft;
 	ssize_t		nwritten;
 
 	if (n == 0)
@@ -37,8 +38,12 @@ writen(int fd, void *ptr, size_t n)
 		if ((nwritten = write(fd, ptr, nleft)) < 0) {
 			if (errno == EINTR)
 				continue;
-			else
+			else {
+#ifdef DEBUG
+				err_sys("write() error nleft=%d", nleft);
+#endif
 				break;	/* error, return amount read so far */
+			}
 		} else if (nwritten == 0) {
 			break;	/* EOF */
 		}

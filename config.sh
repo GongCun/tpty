@@ -1,12 +1,13 @@
-#!/bin/sh
+#!/bin/ksh
 
 DIR=`dirname $0`
 TEMPC=${DIR}/temp.c
 HEADER=${DIR}/config.h
 EXTRALIBS="-lcrypto"
+[ "`uname -s`" = "SunOS" ] && EXTRALIBS=$EXTRALIBS" -lsocket"
 CC=${CC:-cc}
 
-which $CC >/dev/null 2>&1 || { echo "can't find compiler" >&2; exit 1; }
+test -z "`type $CC 2>/dev/null`" && { echo "can't find compiler" >&2; exit 1; }
 
 cat >${TEMPC} <<!
 #include <openssl/pem.h>
@@ -21,7 +22,7 @@ if $CC -E ${TEMPC} ${CPPFLAGS} >/dev/null 2>&1
 then
 	echo '#define HAVE_OPENSSL 1' >$HEADER
 	echo 'main(){}' >${TEMPC}
-	cc -o ${TEMPC%.c}.out ${TEMPC} ${LDFLAGS} ${EXTRALIBS} >/dev/null 2>&1 \
+	$CC -o ${TEMPC%.c}.out ${TEMPC} ${LDFLAGS} ${EXTRALIBS} >/dev/null 2>&1 \
 	&& echo ${EXTRALIBS}
 else
 	echo '/* #undef HAVE_OPENSSL */' >$HEADER
@@ -38,10 +39,13 @@ func *f = (func *)$func;
 int main(void) { return(f != (func *)$func); }
 !
 {
-if $CC -o ${TEMPC%.c}.out ${TEMPC} >/dev/null 2>&1; then
-echo "#define "`echo HAVE_${func} 1 | tr 'a-z' 'A-Z'`
+unset CPP
+[ "`uname -s`" = "Linux" -a "$func" != "nanosleep" ] && \
+CPP=-D_XOPEN_SOURCE=600
+if $CC -o ${TEMPC%.c}.out ${TEMPC} $CPP >/dev/null 2>&1; then
+echo "#define "`echo HAVE_${func} 1 | tr '[:lower:]' '[:upper:]'`
 else
-echo "/* #undef "`echo HAVE_${func} | tr 'a-z' 'A-Z'`" */"
+echo "/* #undef "`echo HAVE_${func} | tr '[:lower:]' '[:upper:]'`" */"
 fi
 } >>$HEADER
 done

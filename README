@@ -53,6 +53,9 @@ Table of Contents:
 4.3	Very few chances, when tptyreplay program was interrupted, the
 	terminal will change color or doesn't echo back.
 4.4	Can I use the ssh-key to encrypt the sensitive field using tpty-crypt?
+4.5	On some Linux OS like Ubuntu, have pts(4) functions such as
+	grantpt(3), but config.sh shows the functions not exist.
+
 ______________________________________________________________________________________________
 
 
@@ -590,3 +593,26 @@ ______________________________________________________________________________
 	Use tpty-keygen(1) to generate the key pair, use the tpty-crypt(1)
 	to encrypt the field, use the tpty(1) to decrypt the field with '-p' and
 	'-k' option.
+
+4.5	On some Linux OS like Ubuntu, have pts(4) functions such as
+	grantpt(3), but config.sh shows the functions not exist.
+
+	config.sh using the following script to test if the function exits:
+
+	    # cat >temp.c <<!
+	    ...
+	    typedef char func(void);
+	    func *f = (func *)grantpt;
+	    ...
+	    !
+
+	    # $CC temp.c $CPPFLAGS
+	    If can't find the function will happen 'undeclared' error.
+
+	Some pseudoteminal functions is part of the UNIX 98 pseudoterminal
+	support, compile them on some Linux OS need specify the _XOPEN_SOURCE
+	micro, please see the Linux Programmer's Manual. So you can try:
+
+	    export CPPFLAGS=-D_XOPEN_SOURCE
+	    ./config.sh && make -e
+	

@@ -23,11 +23,11 @@
  *
  */
 #include "tpty.h"
+pid_t		child;
 
 void do_driver (int (*f_driver)(void))
 {
 	int		pipe[2];
-	pid_t		child;
 
 	/*
 	 * create a stream pipe to communication with the driver.

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/ksh
 
 KEY=$1
 

@@ -25,7 +25,6 @@
 #include "tpty.h"
 #include <termios.h>
 #include <signal.h>
-#include <setjmp.h>
 
 /*
  *  -I: interact manually
@@ -63,9 +62,6 @@ loop(int, int);			/* at the file loop.c */
 static void
 sig_winch(int);
 
-static void 
-sig_alrm(int);
-
 
 int             fdm;
 char           *pathconfig;
@@ -87,13 +83,16 @@ int             rmflg = 0;
 int             status;
 int             ret;
 int		interactive;
-static sigjmp_buf jmpbuf;
+int		savetty = -1;
+
+static struct termios save_termios;
+static void _tty_reset(void);
 
 int
 main(int argc, char **argv)
 {
 	int             c, ignoreeof, noecho, verbose, defdriver;
-	pid_t           pid, childpid = 0;
+	pid_t           pid;
 	char            slave_name[20];
 	struct termios  orig_termios;
 	struct winsize  size;
@@ -204,25 +203,43 @@ main(int argc, char **argv)
 		err_quit(HELP);
 	if (encflg && !(keyfd && rsafd))
 		err_quit(HELP);
+	if (zeroflg && manflg) {
+		err_msg(HELP);
+		err_quit("The '-X' and '-I' are mutually exclusive.");
+	}
 
 	if (encflg && rmflg)
 		if (unlink(key_name) < 0)
 			err_sys("unlink error");
 
+	if (isatty(STDIN_FILENO)) {
+	       	if (tcgetattr(STDIN_FILENO, &save_termios) < 0)
+			err_sys("tcgetattr STDIN_FILENO error");
+		savetty = dup(STDIN_FILENO);
+	}
+
+	if (atexit(_tty_reset) < 0)
+		err_sys("atexit error");
+
 #undef __BUFLEN
 #define __BUFLEN strlen(buf)
 	snprintf(buf, sizeof(buf), "TPTY started on %s\n", gettime());
 
-	if (interactive) {	/* fetch current termios and window size */
-		if (ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size) < 0)
-			err_sys("TIOCGWINSZ error");
+	ret = ioctl(STDIN_FILENO, TIOCGWINSZ, (char *) &size);
+	if (interactive && ret < 0) {
+		err_sys("TIOCGWINSZ error");
+	}
+	if (ret != -1) {
 		buf[__BUFLEN-1] = '\0'; /* delete '\n' */
 		snprintf(buf + __BUFLEN, sizeof(buf) - __BUFLEN, " (%d rows, %d columns)\n",
 				size.ws_row, size.ws_col);
-		if (!zeroflg) {
+		if (!zeroflg && interactive) {
 			if (writen(STDERR_FILENO, buf, __BUFLEN) != __BUFLEN)
 				err_sys("writen() error");
 		}
+	}
+
+	if (interactive) {	/* fetch current termios and window size */
 		if (tcgetattr(STDIN_FILENO, &orig_termios) < 0)
 			err_sys("tcgetattr error on stdin");
 		pid = pty_fork(&fdm, slave_name, sizeof(slave_name),
@@ -241,6 +258,7 @@ main(int argc, char **argv)
 			err_sys("can't execute: %s", argv[optind]);
 	}
 	/* parent continue... */
+
 	if (outputfd >= 0) {
 		if (writen(outputfd, buf, __BUFLEN) != __BUFLEN)
 			err_sys("writen() error");
@@ -262,71 +280,53 @@ main(int argc, char **argv)
 		if (tty_raw(STDIN_FILENO) < 0)	/* user's tty to raw mode */
 			err_sys("tty_raw error");
 	}
-	if (atexit(tty_atexit) < 0)	/* reset user's tty on exit */
-		err_sys("atexit error");
+
 	if (driver || defdriver == 1) {
-		if ((childpid = fork()) < 0) {
-			err_sys("fork error");
-		} else if (childpid == 0) {	/* child */
-			/* use do_driver to changes our stdin/stdout */
-			if (driver)
-				do_driver((int (*)(void))0);
-			else
-				do_driver(def_driver);
-		} else {	/* parent */
-			/* wait driver first */
-			if (waitpid(childpid, &status, 0) != childpid)
-				err_sys("waitpid");
-			ret = sys_exit(status);
-			if (manflg == 0) { /* if no need interact mannually, wait and exit */
-				if (!defdriver) {
-					if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-						err_sys("signal SIGALRM error");
-					if (timeout > 0)
-						alarm(timeout);
-					if (sigsetjmp(jmpbuf, 1))
-						err_quit("tpty timed out");
-					if (waitpid(pid, &status, 0) < 0)
-						err_sys("waitpid error");
-					alarm(0);
-				}
-				ret |= sys_exit(status);
-				if (ret)
-					err_quit("tpty error: rc=%d", ret);
-			}
-			if (ret)
-				err_quit("driver exception: rc=%d\n", ret);
-			/* open /dev/tty to give user keyboard control */
-			do_driver(inter_driver);
-		}
+		if (driver)
+			do_driver((int (*) (void))0);
+		else
+			do_driver(def_driver);
 	}
 	loop(fdm, ignoreeof);	/* copies stdin -> ptym, ptym -> stdout */
 
-	while (waitpid((pid_t) - 1, &status, WNOHANG) > 0)	/* must be non-block
-								 * mode */
-		ret |= sys_exit(status);
-
-	if (childpid != getpid()) { /* parent process exit */
-		if (interactive) {
-			snprintf(buf, sizeof(buf), "TPTY done on %s\n", gettime());
-			if (!zeroflg) {
-				tty_atexit();
-				if (writen(STDERR_FILENO, buf, strlen(buf)) != strlen(buf))
-					err_sys("writen() error");
-			}
-
-			/* don't write exit message into output file,
- 			 * otherwise tptyreplay will have exception */
-#if 0
-			if (outputfd >= 0) {
-				if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
-					err_sys("writen() error");
-			}
-#endif
+	/*
+ 	 * May be infinite wait for all the child process to exit,
+	 * so we need to kill the child process and ignore the result.
+	 */
+	ret = 0;
+	if (pid != 0)
+		kill(pid, SIGTERM);
+	if (child != 0)
+		kill(child, SIGTERM);
+	while (1) {
+		if (wait(&status) < 0) {
+			if (errno == EINTR) 
+				continue;
+			if (errno == ECHILD)
+				break;
+			ret |= sys_exit(status);
 		}
 	}
 
-	exit(ret);
+	if (interactive) {
+		snprintf(buf, sizeof(buf), "TPTY done on %s\n", gettime());
+		if (!zeroflg) {
+			_tty_reset();
+			if (writen(tty, buf, strlen(buf)) != strlen(buf))
+				err_sys("writen() error");
+		}
+		/*
+		 * don't write exit message into output file, otherwise
+		 * tptyreplay will have exception 
+		 */
+	}
+
+	if (ret & EXP_TIMEOUT)
+		err_quit("tpty timed out");
+	else if (ret & EXP_ERRNO)
+		err_quit("tpty error");
+	else
+		exit(ret);
 }
 
 static void
@@ -368,9 +368,10 @@ sig_winch(int signo)
 
 }
 
-static void 
-sig_alrm(int signo)
+static void _tty_reset(void)
 {
-	siglongjmp(jmpbuf, 1);	/* jump back to main, and exit */
+	if (savetty >= 0 && tcsetattr(savetty, TCSAFLUSH, &save_termios) < 0)
+		err_sys("tcsetattr savetty error");  
+
 }
 

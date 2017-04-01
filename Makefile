@@ -1,6 +1,6 @@
 DIRS = lib src
-RUBY = $(shell which ruby 2>/dev/null)
-ifneq (,$(RUBY))
+RUBY = $(shell type ruby 2>&1)
+ifeq (,$(findstring not found,$(RUBY)))
 	DIRS += vtparse
 endif
 
@@ -11,7 +11,7 @@ all:
 
 install:
 	cd src && $(MAKE) install
-	cd man && $(MAKE) install
+	cd man && ($(MAKE) -B -k && $(MAKE) install)
 
 clean:
 	for i in $(DIRS) bin dbg test; do \
