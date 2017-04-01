@@ -93,7 +93,7 @@ int
 main(int argc, char **argv)
 {
 	int             c, ignoreeof, noecho, defdriver;
-	pid_t           pid;
+	pid_t           pid, p;
 	char            slave_name[20];
 	struct termios  orig_termios;
 	struct winsize  size;
@@ -292,7 +292,22 @@ main(int argc, char **argv)
 	loop(fdm, ignoreeof);	/* copies stdin -> ptym, ptym -> stdout */
 
 	/*
- 	 * Wait for all the child process to exit.
+ 	 * Wait driver process exit and get exit code.
+	 */
+	while ((p = wait(&status)) != child) {
+		if (p < 0) {
+			if (errno == EINTR)
+				continue;
+			else if (errno == ECHILD)
+				break;
+			else
+				err_sys("wait() error");
+		}
+	}
+	ret = sys_exit(status);
+
+	/*
+ 	 * Wait for all the pty_fork() child process to exit.
 	 * If timed out, it's possiba to wait the execvp() process
 	 * indefinitely, so kill the process and ignore the result.
 	 */
@@ -305,20 +320,10 @@ main(int argc, char **argv)
  	 * Wait WNOHANG to avoid waiting indefinitely if the process
 	 * ignore the SIGTERM.
 	 */
-	while (waitpid(pid, NULL, WNOHANG) > 0)
-		;
-
-	while ((pid = wait(&status)) != child) {
-		if (pid < 0) {
-			if (errno == EINTR)
-				continue;
-			else if (errno == ECHILD)
-				break;
-			else
-				err_sys("wait() error");
-		}
+	while ((p = waitpid((pid_t)-1, NULL, WNOHANG)) > 0) {
+		if (verbose)
+			fprintf(stderr, "child process %ld exited\n", (long)p);
 	}
-	ret = sys_exit(status);
 
 	if (interactive) {
 		snprintf(buf, sizeof(buf), "TPTY done on %s\n", gettime());

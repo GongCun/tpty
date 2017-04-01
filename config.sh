@@ -1,9 +1,4 @@
-if [ -x /bin/ksh ]
-then
-`#!/bin/ksh`
-else
-`#!/bin/sh`
-fi
+#!/bin/ksh
 
 
 DIR=`dirname $0`
@@ -26,12 +21,12 @@ cat >${TEMPC} <<!
 
 if $CC -E ${TEMPC} ${CPPFLAGS} >/dev/null 2>&1
 then
-	echo '#define HAVE_OPENSSL 1' >$HEADER
+	echo '#define HAVE_OPENSSL 1' >${HEADER}.tmp
 	echo 'main(){}' >${TEMPC}
 	$CC -o ${TEMPC%.c}.out ${TEMPC} ${LDFLAGS} ${EXTRALIBS} >/dev/null 2>&1 \
 	&& echo ${EXTRALIBS}
 else
-	echo '/* #undef HAVE_OPENSSL */' >$HEADER
+	echo '/* #undef HAVE_OPENSSL */' >${HEADER}.tmp
 fi
 
 for func in unlockpt posix_openpt ptsname grantpt nanosleep
@@ -50,8 +45,13 @@ echo "#define "`echo HAVE_${func} 1 | tr '[:lower:]' '[:upper:]'`
 else
 echo "/* #undef "`echo HAVE_${func} | tr '[:lower:]' '[:upper:]'`" */"
 fi
-} >>$HEADER
+} >>${HEADER}.tmp
 done
 
-rm -rf ${TEMPC%.c}.* >/dev/null 2>&1
+cmp -s $HEADER ${HEADER}.tmp
+if [ $? -eq 1 ]
+then
+	cp ${HEADER}.tmp $HEADER
+fi
+rm -rf ${TEMPC%.c}.* ${HEADER}.tmp >/dev/null 2>&1
 
