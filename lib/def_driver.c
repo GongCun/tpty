@@ -117,8 +117,9 @@ def_driver(void)
 	for (;;) {
 		cc = i_read(tty, timeout, readin_end, readin_len - 1 - buf_len);
 
-		if (cc == DRIVER_EOF)
+		if (cc == DRIVER_EOF) {
 			return_def_driver(EXP_EOF);
+		}
 		if (cc == DRIVER_ERROR) {
 			if (i_read_errno == EIO)
 				return_def_driver(EXP_EOF);
@@ -138,6 +139,9 @@ def_driver(void)
 		fdebug(fdbg, "\nreadin = <<%s>>\n", readin);
 #endif
 
+		/*
+ 		 * Scan the config, send th command if the string is expected.
+		 */
 		for (i = 0; i < n; i++) {
 			if (!exp_list[i].matched &&
 			 (ret = match_readin(readin, exp_list[i].prompt))) {
@@ -163,6 +167,7 @@ def_driver(void)
 				break;
 			}
 		}
+		/*------------------------------------------------------------*/
 
 		/* move last half to first half */
 		if (buf_len == readin_len - 1) {
@@ -175,7 +180,58 @@ def_driver(void)
 cleanup:
 	fclose(fp);
 	free(readin);
-	return return_val;
+	if (!manflg || (manflg && return_val != EXP_EOF)) {
+		fprintf(stderr, "manflg=%d, return_val=%d\n", manflg, return_val);
+		return return_val;
+	}
+
+	/*
+ 	 * Do the rest manually and interactively.
+	 */
+	fd_set	rset, saveset;
+	int 	maxfd;
+	char	buf[MAXLINE];
+
+	/*
+	if ((tty = open("/dev/tty", O_RDONLY, 0)) < 0)
+		err_sys("open /dev/tty error"); */
+	if (!isatty(tty) || tty_raw(tty) < 0) /* setup raw mode again */
+		err_sys("tty_raw(tty) error");
+
+	maxfd = (STDIN_FILENO > tty) ? STDIN_FILENO : tty;
+	FD_ZERO(&rset);
+	FD_SET(STDIN_FILENO, &rset);
+	FD_SET(tty, &rset);
+	saveset = rset;
+
+start:
+	for (;;) {
+		rset = saveset;
+		ret = select(maxfd + 1, &rset, NULL, NULL, (struct timeval *)0);
+		if (ret < 0) {
+			if (errno == EINTR)
+				continue;
+			return EXP_ERRNO;
+		} else if (ret == 0) {
+			return EXP_TIMEOUT;
+		}
+
+		if (FD_ISSET(STDIN_FILENO, &rset)) {
+			len = read(STDIN_FILENO, buf, MAXLINE);
+			if (len <= 0)
+				return EXP_ERRNO;
+			if (writen(tty, buf, len) != len)
+				return EXP_ERRNO;
+		}
+
+		if (FD_ISSET(tty, &rset)) {
+			len = read(tty, buf, MAXLINE);
+			if (len <= 0)
+				return EXP_ERRNO;
+			if (writen(STDOUT_FILENO, buf, len) != len)
+				return EXP_ERRNO;
+		}
+	}
 }
 
 int

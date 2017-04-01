@@ -44,6 +44,6 @@ install: $(PROGS)
 	done
 
 clean:
-	rm -f $(PROGS) $(TEMPFILES) *.o
+	rm -f $(PROGS) $(TEMPFILES) *.o tpty-crypt
 
 include $(ROOT)/Make.libtpty.inc

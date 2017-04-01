@@ -273,40 +273,10 @@ main(int argc, char **argv)
 	if (atexit(tty_atexit) < 0)	/* reset user's tty on exit */
 		err_sys("atexit error");
 	if (driver || defdriver == 1) {
-		if ((childpid = fork()) < 0) {
-			err_sys("fork error");
-		} else if (childpid == 0) {	/* child */
-			/* use do_driver to changes our stdin/stdout */
-			if (driver)
-				do_driver((int (*)(void))0);
-			else
-				do_driver(def_driver);
-		} else {	/* parent */
-			/* wait driver first */
-			if (waitpid(childpid, &status, 0) != childpid)
-				err_sys("waitpid");
-			ret = sys_exit(status);
-			if (manflg == 0) { /* if no need interact mannually, wait and exit */
-				if (!defdriver) {
-					if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-						err_sys("signal SIGALRM error");
-					if (timeout > 0)
-						alarm(timeout);
-					if (sigsetjmp(jmpbuf, 1))
-						err_quit("tpty timed out");
-					if (waitpid(pid, &status, 0) < 0)
-						err_sys("waitpid error");
-					alarm(0);
-				}
-				ret |= sys_exit(status);
-				if (ret)
-					err_quit("tpty error: rc=%d", ret);
-			}
-			if (ret)
-				err_quit("driver exception: rc=%d\n", ret);
-			/* open /dev/tty to give user keyboard control */
-			do_driver(inter_driver);
-		}
+		if (driver)
+			do_driver((int (*) (void))0);
+		else
+			do_driver(def_driver);
 	}
 	loop(fdm, ignoreeof);	/* copies stdin -> ptym, ptym -> stdout */
 
@@ -327,12 +297,6 @@ main(int argc, char **argv)
 
 			/* don't write exit message into output file,
  			 * otherwise tptyreplay will have exception */
-#if 0
-			if (outputfd >= 0) {
-				if (writen(outputfd, buf, strlen(buf)) != strlen(buf))
-					err_sys("writen() error");
-			}
-#endif
 		}
 	}
 
@@ -386,6 +350,7 @@ sig_alrm(int signo)
 
 static void sys_reset(void)
 {
+	tty_atexit();
 	/*
  	 * Reset the terminal anyway.
 	 */

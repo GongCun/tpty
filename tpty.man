@@ -1,306 +1,396 @@
-tpty(1) 			 tpty man page			       tpty(1)
 
 
 
-NAME
-       tpty  −	tpty execute the program in a terminal session of its own, use
-       to control the stream through the pseudo terminal.
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
 
-SYNOPSIS
-       tpty [ ‐x ‐c config ] [ ‐T timeout ‐d driver ] [ ‐einuvXI ‐o outfile ‐t
-       timingfile  ‐a  auditfile  ‐p  RSAPrivateKey ‐k EncrypedKey ] program [
-       args ... ]
 
-DESCRIPTION
-       tpty based on Mr. Stevens’s pty program, and its first function	is  to
-       add  a  pseudo‐terminal	between  the input and ouput of the program to
-       unbuffer the standard I/O. For example, suppose you  are  watching  the
-       output of
-	Background‐Running  Job,  you  can disable this automatic buffering as
-       follows:
 
-	       tpty ‐i program </dev/null >file.out &
+     NAME
+	  tpty - tpty execute the program in a terminal	session	of its
+	  own, use to control the stream through the pseudo terminal.
 
-       Using the tpty, we can implement the script(1) program as the following
-       shell script:
+     SYNOPSIS
+	  tpty [ -x -c config ]	[ -T timeout -d	driver ] [ -einuvXI -o
+	  outfile -t timingfile	-a auditfile -p	RSAPrivateKey -k
+	  EncrypedKey ]	program	[ args ... ]
 
-	       tpty "${SHELL:‐/usr/bin/ksh}" | tee typescript
+     DESCRIPTION
+	  tpty based on	Mr. Stevens's pty program, and its first
+	  function is to add a pseudo-terminal between the input and
+	  ouput	of the program to unbuffer the standard	I/O. For
+	  example, suppose you are watching the	output of
+	   Background-Running Job, you can disable this	automatic
+	  buffering as follows:
 
-       or
+		  tpty -i program </dev/null >file.out &
 
-	       tpty ‐o typescript "${SHELL:‐/usr/bin/ksh}"
+	  Using	the tpty, we can implement the script(1) program as
+	  the following	shell script:
 
-       Using  the  tpty, we can "talk" to the interactive programs noninterac‐
-       tively like the expect(1).  The option (−d) allows tpty to be connected
-       to  a  driver  process for its input and output. The standard output of
-       the driver is tpty’s standard input and vice versa.
+		  tpty "${SHELL:-/usr/bin/ksh}"	| tee typescript
 
-							     coprocess
-	    +‐‐‐‐‐‐‐‐‐+   pipe1      +‐‐‐‐‐‐‐‐‐‐+	  +‐‐‐‐‐‐‐‐‐‐‐+
-	    | driving |‐‐‐‐‐‐‐‐‐‐‐‐‐>| pseudo	|‐‐‐‐‐‐‐‐>|stdin      |
-	    | program |<‐‐‐‐‐‐‐‐‐‐‐‐‐| terminal |<‐‐‐‐‐‐‐‐|stdout     |
-	    +‐‐‐‐‐‐‐‐‐+   pipe2      +‐‐‐‐‐‐‐‐‐‐+	  +‐‐‐‐‐‐‐‐‐‐‐+
+	  or
 
-       You can write the driver program yourself like this:
+		  tpty -o typescript "${SHELL:-/usr/bin/ksh}"
 
-	    % cat driver.sh
+	  Using	the tpty, we can "talk"	to the interactive programs
+	  noninteractively like	the expect(1).	The option (-d)	allows
+	  tpty to be connected to a driver process for its input and
+	  output. The standard output of the driver is tpty's standard
+	  input	and vice versa.
 
-	    while read line
-	    do
-		if [[ "$line" = *"’s New password:" ]] || \
-		   [[ "$line" = "Enter the new password again:" ]]
-	       then
-		   echo "secret"
-	       fi
-	    done
+								coprocess
+	       +---------+   pipe1	+----------+	     +-----------+
+	       | driving |------------->| pseudo   |-------->|stdin	 |
+	       | program |<-------------| terminal |<--------|stdout	 |
+	       +---------+   pipe2	+----------+	     +-----------+
 
-       Then you can run the following command to change  password  noninterac‐
-       tively:
+	  You can write	the driver program yourself like this:
 
-	    % tpty ‐n ‐e ‐d driver.sh passwd foo
+	       % cat driver.sh
 
-       tpty  also  provides the option (−x) for default driver, if use default
-       driver, you must specify the config file (−c). The config file’s format
-       like:
+	       while read line
+	       do
+		   if [[ "$line" = *"'s	New password:" ]] || \
+		      [[ "$line" = "Enter the new password again:" ]]
+		  then
+		      echo "secret"
+		  fi
+	       done
 
-	   ExpectString % SendReply % <TptyReserveWords>
 
-       Here is an example using the config file:
 
-	    login: % foo
-	    foo’s Password: % password
-	    foo@host:[/home/foo]# % date "+%y%m%d"
-	    foo@host:[/home/foo]# % exit
+     Page 1					    (printed 3/31/17)
 
-       The field separator is ’%’. Note:
 
-       1) If  your  shell prompt (PS1) or expect string is ’%’, please be sure
-	  to leave a space before the first delimiter, like this:
 
-	       % % whoami
 
-	  Don’t like this
 
-	       %% whoami
 
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
 
-       2) If your command include "%", it’s no problem:
 
-	       foo@host:[/home/foo]# % date "+%D"
 
+	  Then you can run the following command to change password
+	  noninteractively:
 
-       tpty looks for the ExpectString in the  interactive  program’s  output,
-       inputs the SendReply if the pattern matched. That means:
+	       % tpty -n -e -d driver.sh passwd	foo
 
-	    case Output matched:
-		 ExpectString1)
-		      puts SendReply1; break;
-		 ExpectString2)
-		      puts SendReply2; break;
-		 ...
+	  tpty also provides the option	(-x) for default driver, if
+	  use default driver, you must specify the config file (-c).
+	  The config file's format like:
 
-       The  config  file  can use the regular expression, since if the Expect‐
-       String has symbol ’%’, you can use ’.’ to replace it to avoid confusing
-       the  characters	and  delimiters.   The symbols and subroutines is from
-       regex(3). You must precede them with a \ (backslash)  if  you  want  to
-       match the special symbol itself. For example, \$ matches a dollar sign.
+	      ExpectString % SendReply % <TptyReserveWords>
 
-	   login: %foo
-	   foo’s Password: %password
-	   foo@host:[/]# % shell‐cmd
-	   .*\[.*\].*% shell‐cmd
-	   foo@host:[/]# % exit
+	  Here is an example using the config file:
 
-       Note, the pattern match do not ignore the BLANK
+	       login: %	foo
+	       foo's Password: % password
+	       foo@host:[/home/foo]# % date "+%y%m%d"
+	       foo@host:[/home/foo]# % exit
 
-       The TptyReserveWords is NONR, REPEAT, INTERACT, ENCRYPT:
+	  The field separator is '%'. Note:
 
-       NONR   means do not input the newline character (’\r’).
+	  1) If	your shell prompt (PS1)	or expect string is '%',
+	     please be sure to leave a space before the	first
+	     delimiter,	like this:
 
-       REPAET
-		  while (Output matched ExpectString)
-		      SendReply;
+		  % % whoami
 
-       INTERACT (must use with −I option)
+	     Don't like	this
 
-		  if (Output matched ExpectString)
-			  do the rest thing manually;
+		  %% whoami
 
-       ENCRYPT
-	      is added by tpty‐crypt(1) automatically, no need add the keyword
-	      manually.   The  tpty‐crypt(1)  and  tpty‐keygen(1)  are used to
-	      encrypt the sensitive fields of the config file.	You should use
-	      tpty‐keygen(1) to generate an RSA keypair with PEM format:
 
-		  $ tpty‐keygen ./private.pem
-		  Generating RSA private key, 2048 bit long modulus
-		  ...+++
-		  private key : ./private.pem
-		  public  key : ./private.pem.pub
+	  2) If	your command include "%", it's no problem:
 
-	      Then  you can encode the config file with tpty‐crypt(1) The syn‐
-	      tax is
+		  foo@host:[/home/foo]#	% date "+%D"
 
-		  tpty‐crypt <FileName> <SegmentName> <PublicKey> <StoreFile>
 
-	      The FileName is the configuration file (‐c  <file>).   The  Seg‐
-	      mentName	is  which  segment you want to encode, like "password"
-	      etc.  The StoreFile is the file which  is  used  to  stored  the
-	      encrypted segment.  For example, The original file is
+	  tpty looks for the ExpectString in the interactive program's
+	  output, inputs the SendReply if the pattern matched. That
+	  means:
 
-		  assword: % secret
-		  .*# % whoami
-		  .*# % exit
+	       case Output matched:
+		    ExpectString1)
+			 puts SendReply1; break;
+		    ExpectString2)
+			 puts SendReply2; break;
+		    ...
 
-	      After executed the following command:
+	  The config file can use the regular expression, since	if the
+	  ExpectString has symbol '%', you can use '.' to replace it
+	  to avoid confusing the characters and	delimiters.  The
+	  symbols and subroutines is from regex(3). You	must precede
+	  them with a \	(backslash) if you want	to match the special
 
-		  $ tpty‐crypt config "assword:" private.pem.pub config.key
 
-	      The config file will become:
 
-		  assword: %<ENCRYPT>
-		  .# % whoami
-		  .# % exit
+     Page 2					    (printed 3/31/17)
 
-	      The  encrypted  key  is stored in config.key.  After the file is
-	      encrypted, execute:
 
-		  $ tpty ‐x ‐c config ‐p private.pem ‐k config.key \
-		      telnet remote‐host
 
 
-       Here is another sample of config file:
 
-	   ogin: %foo
-	   assword: %secret
-	   .*# % cat LargeFile | more
-	   ‐‐More‐‐% f % <NONR> % <REPEAT>
-	   .*# % <INTERACT>
 
-       It means enter the name ’foo’ when the login prompt appears, enter  the
-       password ’secret’ when the password prompt appears, displays the Large‐
-       File contents with more(1), moves the pages until the end of the  file,
-       then do the rest thing manually.
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
 
 
 
-OPTIONS
-       Valid options are:
+	  symbol itself. For example, \$ matches a dollar sign.
 
-       −a auditfile
-	      File containing all input from stdin, and the time when the com‐
-	      mand were executed. You can run the command:
+	      login: %foo
+	      foo's Password: %password
+	      foo@host:[/]# % shell-cmd
+	      .*\[.*\].*% shell-cmd
+	      foo@host:[/]# % exit
 
-		  $ col ‐b <auditfile >auditfile.fix 2>&1
+	  Note,	the pattern match do not ignore	the BLANK
 
-	      to cleanup the backspace, or run the vtclean(1) to  cleanup  all
-	      control characters.
+	  The TptyReserveWords is NONR,	REPEAT,	INTERACT, ENCRYPT:
 
-       −d driver
-	      Specifies the driver program for stdin/stdout.
+	  NONR means do	not input the newline character	('\r').
 
-       −e     Does not echo characters for slave pty’s line discipline.
+	  REPAET
+		   while (Output matched ExpectString)
+		       SendReply;
 
-       −c config
-	      Specifies  the  config file with default driver, must use −c and
-	      −x
-	       flags together.
+	  INTERACT (must use with -I option)
 
-       −i     Ignore EOF on standard input.
+		   if (Output matched ExpectString)
+			   do the rest thing manually;
 
-       −k EncryptedKey
-	      Specifies the file which save the encrypted segment of the  con‐
-	      fig file. Only support the PEM key format with 2048 bits now.
+	  ENCRYPT
+	       is added	by tpty-crypt(1) automatically,	no need	add
+	       the keyword manually.  The tpty-crypt(1)	and tpty-
+	       keygen(1) are used to encrypt the sensitive fields of
+	       the config file.	 You should use	tpty-keygen(1) to
+	       generate	an RSA keypair with PEM	format:
 
-       −n     No  interactive  mode,  will  not  initial  the  window size and
-	      termios.
+		   $ tpty-keygen ./private.pem
+		   Generating RSA private key, 2048 bit	long modulus
+		   ...+++
+		   private key : ./private.pem
+		   public  key : ./private.pem.pub
 
-       −o outfile
-	      Designates the file to be used for record  the  program’s  input
-	      and output.
+	       Then you	can encode the config file with	tpty-crypt(1)
+	       The syntax is
 
-       −p RSAPrivateKey
-	      Specifies the RSA private key to decrypt the config file.
+		   tpty-crypt <FileName> <SegmentName> <PublicKey> <StoreFile>
 
-       −t TimingFile
-	      Output  timing  data  to	TimingFile.   This  data  contains two
-	      fields, separated by a space.  The  first  field	indicates  how
-	      much  time  elapsed since the previous output.  The second field
-	      indicates how many  characters  were  output  this  time.   This
-	      information  can	be  used to replay outfile (‐o) with realistic
-	      typing and output delays.
+	       The FileName is the configuration file (-c <file>).
+	       The SegmentName is which	segment	you want to encode,
+	       like "password" etc.  The StoreFile is the file which
+	       is used to stored the encrypted segment.	 For example,
+	       The original file is
 
-       −T timeout
-	      If after timeout, none of interactive program’s output have been
-	      seen,  tpty  will  exit. If you don’t specify the ‐x option, the
-	      timeout will be ignored. Default timeout is 10 seconds. If time‐
-	      out < 0, will wait forever.
+		   assword: % secret
+		   .*# % whoami
+		   .*# % exit
 
-       −u     Unlink the encrypted key file (specified by −k option).
+	       After executed the following command:
 
-       −v     Verbose  mode. It only displays the slave pty’s device name, not
-	      is very helpfu l for debugging.
 
-       −x     Choose default driver. Must use −c and  −x  flags  together,  it
-	      will  interpret  the  config file, drive interactive programs in
-	      noninteractive modes.
 
-       −X     Redirect output to /dev/null if use the default driver.
+     Page 3					    (printed 3/31/17)
 
-       −I     If you don’t want to completely automate a task  with  a	driver
-	      (−d  or −x), the −I option is to automate some of it and then do
-	      the rest manually.  For example, if the  config’s  (−c)  content
-	      is:
 
-		      assword: %TopSecret
-		      .*# % <INTERACT>
 
-	      When execute:
 
-		   tpty ‐I ‐x ‐c config ssh remote‐host
 
-	      It  means after login the shell automatically, do the rest thing
-	      manually.
 
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
 
-NOTES
-       Certain interactive commands, such as vi(1), create garbage in the out‐
-       file  (‐o).   tpty  works best with commands that do not manipulate the
-       screen, the results are meant to emulate a hardcopy terminal.
 
 
-Exit Status
-       This command returns the following exit values:
+		   $ tpty-crypt	config "assword:" private.pem.pub config.key
 
-       0      Successful completion.
+	       The config file will become:
 
-       >0     An error occurred.
+		   assword: %<ENCRYPT>
+		   .# %	whoami
+		   .# %	exit
 
+	       The encrypted key is stored in config.key.  After the
+	       file is encrypted, execute:
 
-BUGS
-       If tpty with ‐o option, it will place everything in  the  output  file,
-       including  linefeeds  and  backspaces.  This is not what the naive user
-       expects. But, you can use some tools to eliminate the  garbage  charac‐
-       ters,  e.g.   vtclean(1)  using	a  state machine to cleanup the escape
-       sequences based on the design publied by Paul Williams. You can try the
-       command:
+		   $ tpty -x -c	config -p private.pem -k config.key \
+		       telnet remote-host
 
-	   col ‐b <record 2>/dev/null | vtclean >record.clean
 
+	  Here is another sample of config file:
 
-HISTORY
-       tpty  The  prototype  of  tpty  was  pty  program written by W. Richard
-       Stevens for APUE.  Cun Gong implemented the default driver for interac‐
-       tive  programs  with  other  features,  was  inspired  by expect(1) and
-       GNU/Linux script(1) utility.  The tpty worked on AIX, GNU/Linux and Mac
-       OS X.
+	      ogin: %foo
+	      assword: %secret
+	      .*# % cat	LargeFile | more
+	      --More--%	f % <NONR> % <REPEAT>
+	      .*# % <INTERACT>
 
-SEE ALSO
-       expect(1), script(1), tptyreplay(1), tty(1), pty(5), regex(3)
+	  It means enter the name 'foo'	when the login prompt appears,
+	  enter	the password 'secret' when the password	prompt
+	  appears, displays the	LargeFile contents with	more(1), moves
+	  the pages until the end of the file, then do the rest	thing
+	  manually.
 
-PROBLEMS
-       Problems with tpty should be reported to <gong_cun@bocmacau.com>
 
 
+     OPTIONS
+	  Valid	options	are:
 
-1.1				 30 March 2017			       tpty(1)
+	  -a auditfile
+	       File containing all input from stdin, and the time when
+	       the command were	executed. You can run the command:
+
+		   $ col -b <auditfile >auditfile.fix 2>&1
+
+	       to cleanup the backspace, or run	the vtclean(1) to
+	       cleanup all control characters.
+
+	  -d driver
+	       Specifies the driver program for	stdin/stdout.
+
+	  -e   Does not	echo characters	for slave pty's	line
+	       discipline.
+
+	  -c config
+	       Specifies the config file with default driver, must use
+	       -c and -x
+
+
+
+     Page 4					    (printed 3/31/17)
+
+
+
+
+
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+		flags together.
+
+	  -i   Ignore EOF on standard input.
+
+	  -k EncryptedKey
+	       Specifies the file which	save the encrypted segment of
+	       the config file.	Only support the PEM key format	with
+	       2048 bits now.
+
+	  -n   No interactive mode, will not initial the window	size
+	       and termios.
+
+	  -o outfile
+	       Designates the file to be used for record the program's
+	       input and output.
+
+	  -p RSAPrivateKey
+	       Specifies the RSA private key to	decrypt	the config
+	       file.
+
+	  -t TimingFile
+	       Output timing data to TimingFile.  This data contains
+	       two fields, separated by	a space.  The first field
+	       indicates how much time elapsed since the previous
+	       output.	The second field indicates how many characters
+	       were output this	time.  This information	can be used to
+	       replay outfile (-o) with	realistic typing and output
+	       delays.
+
+	  -T timeout
+	       If after	timeout, none of interactive program's output
+	       have been seen, tpty
+
+	       will exit. If you don't specify the -x option, the
+	       timeout will be ignored.	Default	timeout	is 10 seconds.
+	       If timeout < 0, will wait forever.
+
+	  -u   Unlink the encrypted key	file (specified	by -k option).
+
+	  -v   Verbose mode. It	only displays the slave	pty's device
+	       name, not is very helpfu	l for debugging.
+
+	  -x   Choose default driver. Must use -c and -x flags
+	       together, it will interpret the config file, drive
+	       interactive programs in noninteractive modes.
+
+	  -X   Redirect	output to /dev/null if use the default driver.
+
+	  -I   If you don't want to completely automate	a task with a
+	       driver (-d or -x), the -I option	is to automate some of
+	       it and then do the rest manually.  For example, if the
+	       config's	(-c) content is:
+
+
+
+     Page 5					    (printed 3/31/17)
+
+
+
+
+
+
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
+
+
+
+		       assword:	%TopSecret
+		       .*# % <INTERACT>
+
+	       When execute:
+
+		    tpty -I -x -c config ssh remote-host
+
+	       It means	after login the	shell automatically, do	the
+	       rest thing manually.
+
+
+     NOTES
+	  Certain interactive commands,	such as	vi(1), create garbage
+	  in the outfile (-o).	tpty works best	with commands that do
+	  not manipulate the screen, the results are meant to emulate
+	  a hardcopy terminal.
+
+
+     Exit Status
+	  This command returns the following exit values:
+
+	  0    Successful completion.
+
+	  >0   An error	occurred.
+
+
+     BUGS
+	  If tpty with -o option, it will place	everything in the
+	  output file, including linefeeds and backspaces.  This is
+	  not what the naive user expects. But,	you can	use some tools
+	  to eliminate the garbage characters, e.g.  vtclean(1)	using
+	  a state machine to cleanup the escape	sequences based	on the
+	  design publied by Paul Williams. You can try the command:
+
+	      col -b <record 2>/dev/null | vtclean >record.clean
+
+
+     HISTORY
+	  tpty The prototype of	tpty was pty program written by	W.
+	  Richard Stevens for APUE.  Cun Gong implemented the default
+	  driver for interactive programs with other features, was
+	  inspired by expect(1)	and GNU/Linux script(1)	utility.  The
+	  tpty worked on AIX, GNU/Linux	and Mac	OS X.
+
+     SEE ALSO
+	  expect(1), script(1),	tptyreplay(1), tty(1), pty(5),
+	  regex(3)
+
+     PROBLEMS
+	  Problems with	tpty should be reported	to
+	  <gong_cun@bocmacau.com>
+
+
+
+
+     Page 6					    (printed 3/31/17)
+
+
+
