@@ -24,7 +24,6 @@
  */
 #include "tpty.h"
 #include <signal.h>
-#include <setjmp.h>
 
 enum { DRIVER_EOF = -1, DRIVER_ERROR = -2, DRIVER_TIMEDOUT = -3 };
 
@@ -181,7 +180,9 @@ cleanup:
 	fclose(fp);
 	free(readin);
 	if (!manflg || (manflg && return_val != EXP_EOF)) {
+#ifdef DEBUG
 		fprintf(stderr, "manflg=%d, return_val=%d\n", manflg, return_val);
+#endif
 		return return_val;
 	}
 
@@ -193,9 +194,12 @@ cleanup:
 	char	buf[MAXLINE];
 
 	/*
-	if ((tty = open("/dev/tty", O_RDONLY, 0)) < 0)
-		err_sys("open /dev/tty error"); */
-	if (!isatty(tty) || tty_raw(tty) < 0) /* setup raw mode again */
+ 	 * We need a terminal device.
+	 */
+	if (!isatty(tty) && (tty = open("/dev/tty", O_RDONLY, 0)) < 0)
+		err_sys("open /dev/tty error");
+
+	if (tty_raw(tty) < 0) /* setup raw mode anyway */
 		err_sys("tty_raw(tty) error");
 
 	maxfd = (STDIN_FILENO > tty) ? STDIN_FILENO : tty;
@@ -204,7 +208,6 @@ cleanup:
 	FD_SET(tty, &rset);
 	saveset = rset;
 
-start:
 	for (;;) {
 		rset = saveset;
 		ret = select(maxfd + 1, &rset, NULL, NULL, (struct timeval *)0);

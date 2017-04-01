@@ -6,8 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <memory.h>
-#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -30,6 +28,13 @@
 
 #if defined(AIX) || defined(SOLARIS)
 #include <stropts.h>
+#endif
+
+/* memmove() */
+#include <memory.h>
+#include <string.h>
+#ifdef AIX
+#define STDC_WANT_LIB_EXT1 1
 #endif
 
 #ifdef HAVE_OPENSSL /* OpenSSL Library in C */
@@ -126,13 +131,12 @@ extern FILE    *auditfd;
 extern int      tty;
 extern FILE    *fdbg;
 extern int      rmflg;
+extern pid_t	child; /* default driver's child process */
 
 int
 strregex(char *, char *);
 int
 def_driver(void);
-int
-inter_driver(void);
 
 void
 set_fl(int, int);
