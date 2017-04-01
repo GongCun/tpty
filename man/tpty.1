@@ -314,7 +314,9 @@ Choose default driver. Must use \fB\-c\fP and \fB\-x\fP flags together, it will
 interpret the config file, drive interactive programs in noninteractive modes.
 .TP
 \fB\-X\fP
-Redirect output to /dev/null if use the default driver.
+Redirect terminal output to /dev/null if use the default driver. But still can use
+\fB\-o\fP to dump the output. This option and the \fB\-I\fP option are
+mutually exclusive.
 .TP
 \fB\-I\fP
 If you don't want to completely automate a task with a driver
@@ -335,7 +337,8 @@ When execute:
 	tpty -I -x -c \fIconfig\fP ssh remote-host
 
 .fi
-It means after login the shell automatically, do the rest thing manually.
+It means after login the shell automatically, do the rest thing manually. This
+option and \fB\-X\fP option are mutually exclusive.
 
 .SH NOTES
 Certain interactive commands, such as

@@ -39,10 +39,7 @@ func *f = (func *)$func;
 int main(void) { return(f != (func *)$func); }
 !
 {
-unset CPP
-[ "`uname -s`" = "Linux" -a "$func" != "nanosleep" ] && \
-CPP=-D_XOPEN_SOURCE=600
-if $CC -o ${TEMPC%.c}.out ${TEMPC} $CPP >/dev/null 2>&1; then
+if $CC -o ${TEMPC%.c}.out ${TEMPC} $CPPFLAGS >/dev/null 2>&1; then
 echo "#define "`echo HAVE_${func} 1 | tr '[:lower:]' '[:upper:]'`
 else
 echo "/* #undef "`echo HAVE_${func} | tr '[:lower:]' '[:upper:]'`" */"

@@ -147,6 +147,15 @@ loop(int ptym, int ignoreeof)
 	if (nread < 0 && errno != EIO)
 		err_sys("read ptym");
 
+	/*
+ 	 * Must close both stdin and stdout to let the driver known
+	 * pts has closed.
+	 */
+	if (close(STDOUT_FILENO) < 0)
+		err_sys("loop() close stdout error");
+	if (close(STDIN_FILENO) < 0)
+		err_sys("loop() close stdin error");
+
 	return;
 }
 
