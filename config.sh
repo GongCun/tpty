@@ -1,4 +1,10 @@
-#!/bin/ksh
+if [ -x /bin/ksh ]
+then
+`#!/bin/ksh`
+else
+`#!/bin/sh`
+fi
+
 
 DIR=`dirname $0`
 TEMPC=${DIR}/temp.c
