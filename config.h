@@ -1,6 +1,0 @@
-#define HAVE_OPENSSL 1
-#define HAVE_UNLOCKPT 1
-#define HAVE_POSIX_OPENPT 1
-#define HAVE_PTSNAME 1
-#define HAVE_GRANTPT 1
-#define HAVE_NANOSLEEP 1
