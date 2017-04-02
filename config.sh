@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/sh
 
 
 DIR=`dirname $0`
