@@ -30,6 +30,7 @@ Quick Start
 
 	    $ MANPATH=/usr/local/share/man man tpty
 
+	or read the .man file directly.
 ______________________________________________________________________________________________
 
 Table of Contents:
@@ -48,17 +49,18 @@ Table of Contents:
 	like '.../font/devascii/.:0: error: missing charset command'.
 4.1.2	Why I have the OpenSSL library, but don't install the tpty-crypt
 	program?
+4.1.3	Compile the tpty program on AIX 7.2 with GCC 4.8.5, have the
+	opportunity to enconter the duplicate symbols warning.
+4.1.4	On some GNU/Linux like Ubuntu, have pts(4) functions such as
+	grantpt(3), but config.sh shows the functions not exist.
+4.1.5	There may be error when running the config.sh on Solaris.
 4.2	Very few chances, when tpty program exited, the terminal doesn't
 	respond any keys.
 4.3	Very few chances, when tptyreplay program was interrupted, the
 	terminal will change color or doesn't echo back.
 4.4	Can I use the ssh-key to encrypt the sensitive field using tpty-crypt?
-4.5	On some Linux OS like Ubuntu, have pts(4) functions such as
-	grantpt(3), but config.sh shows the functions not exist.
-4.6	Compile the tpty programs on AIX 7.2 with GCC 4.8.5, have the
-	opportunity to enconter the duplicate symbols warning.
-4.7	There may be error when running the config.sh on Solaris.
-4.8	Which systems does tpty support?
+4.5	Which systems does tpty support?
+4.6	What's the same and difference between tpty, script(1) and expect(1)?
 
 ______________________________________________________________________________________________
 
@@ -134,11 +136,20 @@ DESCRIPTION
        to  a  driver  process for its input and output. The standard output of
        the driver is tpty’s standard input and vice versa.
 
-							     coprocess
-	    +‐‐‐‐‐‐‐‐‐+   pipe1      +‐‐‐‐‐‐‐‐‐‐+	  +‐‐‐‐‐‐‐‐‐‐‐+
-	    | driving |‐‐‐‐‐‐‐‐‐‐‐‐‐>| pseudo	|‐‐‐‐‐‐‐‐>|stdin      |
-	    | program |<‐‐‐‐‐‐‐‐‐‐‐‐‐| terminal |<‐‐‐‐‐‐‐‐|stdout     |
-	    +‐‐‐‐‐‐‐‐‐+   pipe2      +‐‐‐‐‐‐‐‐‐‐+	  +‐‐‐‐‐‐‐‐‐‐‐+
+							 coprocess
+	     +‐‐‐‐‐‐‐‐‐+   pipe1    +‐‐‐‐‐‐‐‐‐‐+	 +‐‐‐‐‐‐‐‐‐‐‐+
+	     | driving |‐‐‐‐‐‐‐‐‐‐‐>| pseudo   |‐‐‐‐‐‐‐‐‐|stdin      |
+	     | program |<‐‐‐‐‐‐‐‐‐‐‐| terminal |<‐‐‐‐‐‐‐‐|stdout     |
+	     +‐‐‐‐‐‐‐‐‐+   pipe2    +‐‐‐‐‐‐‐‐‐‐+	 +‐‐‐‐‐‐‐‐‐‐‐+
+		|  ^
+		|  |
+	      /dev/tty
+		|  |
+		v  |
+	     +‐‐‐‐‐‐‐‐+
+	    | Interact |
+	    | Terminal |
+	     +‐‐‐‐‐‐‐‐+
 
        You can write the driver program yourself like this:
 
@@ -344,7 +355,9 @@ OPTIONS
 	      will  interpret  the  config file, drive interactive programs in
 	      noninteractive modes.
 
-       −X     Redirect output to /dev/null if use the default driver.
+       −X     Redirect terminal output to /dev/null if use the default driver.
+	      But  still can use −o to dump the output. This option and the −I
+	      option are mutually exclusive.
 
        −I     If you don’t want to completely automate a task  with  a	driver
 	      (−d  or −x), the −I option is to automate some of it and then do
@@ -359,7 +372,7 @@ OPTIONS
 		   tpty ‐I ‐x ‐c config ssh remote‐host
 
 	      It  means after login the shell automatically, do the rest thing
-	      manually.
+	      manually. This option and −X option are mutually exclusive.
 
 
 NOTES
@@ -391,8 +404,8 @@ HISTORY
        tpty  The  prototype  of  tpty  was  pty  program written by W. Richard
        Stevens for APUE.  Cun Gong implemented the default driver for interac‐
        tive  programs  with  other  features,  was  inspired  by expect(1) and
-       GNU/Linux script(1) utility.  The tpty worked on AIX, GNU/Linux and Mac
-       OS X.
+       GNU/Linux script(1) utility.  The tpty worked on FreeBSD, Solaris, AIX,
+       GNU/Linux and Mac OS X.
 
 SEE ALSO
        expect(1), script(1), tptyreplay(1), tty(1), pty(5), regex(3)
@@ -400,8 +413,8 @@ SEE ALSO
 PROBLEMS
        Problems with tpty should be reported to <gong_cun@bocmacau.com>
 
-_____________________________________________________________________________
 
+=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~==~=~=~=~=~=~=~=~=~=
 2.1	Tptyreplay manual
 
 TPTYREPLAY(1)		      tptyreplay man page		 TPTYREPLAY(1)
@@ -499,7 +512,7 @@ SEE ALSO
 AUTHOR
        The  tptyreplay	was based on GNU/Linux scriptreplay program.  The pro‐
        gram was re‐written by Cun Gong (gong_cun@bocmacau.com) to work on both
-       AIX, Mac OS X and GNU/Linux.
+       FreeBSD, Solaris, AIX, Mac OS X and GNU/Linux.
 
 ______________________________________________________________________________
 
@@ -566,6 +579,40 @@ ______________________________________________________________________________
 	    $ make -e
 	    $ make install
 
+4.1.3	Compile the tpty programs on AIX 7.2 with GCC 4.8.5, have the
+	opportunity to enconter the duplicate symbols warning.
+
+	This problem maybe due to libcrypto have defined the memmove
+	and bcopy repeatly, can ignore this warning, or use IBM XL C/C++
+	compiler to avoid this warning.
+
+4.1.4	On some GNU/Linux like Ubuntu, have pts(4) functions such as
+	grantpt(3), but config.sh shows the functions not exist.
+
+	config.sh using the following script to test if the function exits:
+
+	    # cat >temp.c <<!
+	    ...
+	    typedef char func(void);
+	    func *f = (func *)grantpt;
+	    ...
+	    !
+
+	    # $CC temp.c $CPPFLAGS
+	    If can't find the function will happen 'undeclared' error.
+
+	Some pseudoteminal functions is part of the UNIX 98 pseudoterminal
+	support, compile them on some Linux OS need specify the _XOPEN_SOURCE
+	micro, please see the Linux Programmer's Manual. So you can try:
+
+	    export CPPFLAGS=-D_XOPEN_SOURCE=600
+	    ./config.sh && make -e
+	
+4.1.5	There may be error when running the config.sh on Solaris.
+
+	Solaris' '/bin/sh' seems like csh, you can change the interpreter file
+	from '#!/bin/sh' to '#!/bin/ksh', the config.sh will run correctly.
+	
 4.2	Very few chances, when tpty program exited, the terminal doesn't
 	respond any keys.
 
@@ -598,43 +645,9 @@ ______________________________________________________________________________
 	to encrypt the field, use the tpty(1) to decrypt the field with '-p' and
 	'-k' option.
 
-4.5	On some Linux OS like Ubuntu, have pts(4) functions such as
-	grantpt(3), but config.sh shows the functions not exist.
+4.5	Which systems does tpty support?
 
-	config.sh using the following script to test if the function exits:
-
-	    # cat >temp.c <<!
-	    ...
-	    typedef char func(void);
-	    func *f = (func *)grantpt;
-	    ...
-	    !
-
-	    # $CC temp.c $CPPFLAGS
-	    If can't find the function will happen 'undeclared' error.
-
-	Some pseudoteminal functions is part of the UNIX 98 pseudoterminal
-	support, compile them on some Linux OS need specify the _XOPEN_SOURCE
-	micro, please see the Linux Programmer's Manual. So you can try:
-
-	    export CPPFLAGS=-D_XOPEN_SOURCE=600
-	    ./config.sh && make -e
-	
-4.6	Compile the tpty programs on AIX 7.2 with GCC 4.8.5, have the
-	opportunity to enconter the duplicate symbols warning.
-
-	This problem maybe due to libcrypto have defined the memmove
-	and bcopy repeatly, can ignore this warning, or use IBM XL C/C++
-	compiler to avoid this warning.
-
-4.7	There may be error when running the config.sh on Solaris.
-
-	Solaris's '/bin/sh' seems like csh, you can change the interpreter file
-	from '#!/bin/sh' to '#!/bin/ksh', the config.sh will run correctly.
-	
-4.8	Which systems does tpty support?
-
-	The tpty program has been tested on the following platforms:
+	The tpty program has been tested on these platforms:
 
 	    FreeBSD 10.3 with FreeBSD clang version 3.4.1
 	    Ubuntu 16.04.2 LTS with gcc version 5.4.0
@@ -642,3 +655,16 @@ ______________________________________________________________________________
 	    CentOS Linux release 6.0 with gcc version 4.4.7
 	    Mac OS X 10.12.3 with Apple LLVM version 8.0.0.0
 	    AIX 7.2.0.2 with gcc version 4.8.5 & IBM XL C/C++ V13.1
+
+4.6	What's the same and difference between tpty, script(1) and expect(1)?
+
+	tpty based on W. Richard Stevens' pty program, realized the basic
+	funtion of expect: drive interactive programs in noninteractive modes.
+	But expect(1) as an extension of the Tcl language, provides the
+	ability to be programmable on pseudo terminal. tpty using a config
+	file to driver the interactive programs, also provides a programmable
+	interface via the '-d' option, very simple but effective enough, you
+	can also use it to study the expect(1) source code. GNU script(1) also
+	can record the terminal input and output, but can't drive interactive
+	programs. The tptyreplay can play the typescript as the GNU
+	scriptreplay(1), but provice more play control functions.
