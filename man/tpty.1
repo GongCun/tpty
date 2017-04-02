@@ -37,11 +37,20 @@ connected to a driver process for its input and output. The standard output of
 the driver is \fBtpty\fP's standard input and vice versa.
 .nf
 
-                                                      coprocess
-	+---------+   pipe1      +----------+         +-----------+
-	| driving |------------->| pseudo   |-------->|stdin      |
-	| program |<-------------| terminal |<--------|stdout     |
-	+---------+   pipe2      +----------+         +-----------+
+	                                             coprocess
+	 +---------+   pipe1    +----------+         +-----------+
+	 | driving |----------->| pseudo   |---------|stdin      |
+	 | program |<-----------| terminal |<--------|stdout     |
+	 +---------+   pipe2    +----------+         +-----------+
+	    |  ^
+	    |  |
+	  /dev/tty
+	    |  |
+	    v  |
+	 +--------+
+	| Interact |
+	| Terminal |
+	 +--------+
 
 .fi
 You can write the
