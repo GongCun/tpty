@@ -153,9 +153,9 @@ if you want to match the special symbol itself. For example, \\$ matches a dolla
 Note, the pattern match do not ignore the \fBBLANK\f.
 .PP
 The TptyReserveWords
-is \fBNONR, REPEAT, INTERACT, ENCRYPT\fP:
+is \fBNOCR, REPEAT, INTERACT, ENCRYPT\fP:
 .TP
-.B NONR
+.B NOCR
 means do not input the newline character ('\\r').
 .TP
 .B REPAET
@@ -245,7 +245,7 @@ Here is another sample of config file:
     ogin: %foo
     assword: %secret
     .*# % cat LargeFile | more
-    --More--% f % <NONR> % <REPEAT>
+    --More--% f % <NOCR> % <REPEAT>
     .*# % <INTERACT>
 
 .fi
