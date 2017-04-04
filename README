@@ -12,14 +12,15 @@
 | gong_cun@bocmacau.com                                      |
 **************************************************************
 
-______________________________________________________________________________________________
+______________________________________________________________________________
 
 Quick Start
 
 0.0	Install
 
 	On AIX, type "./config.sh && gmake".
-	On other platforms, type "./config.sh && make" (as long as this is GNU make).
+	On other platforms, type "./config.sh && make" (as long as this is GNU
+	make).
 
 	Install detail please see the 1.0 INSTALL section
 
@@ -31,12 +32,12 @@ Quick Start
 	    $ MANPATH=/usr/local/share/man man tpty
 
 	or read the .man file directly.
-______________________________________________________________________________________________
+______________________________________________________________________________
 
 Table of Contents:
 
 1.0	Install the tpty* program
-1.1	Install the vtlean program
+1.1	Install the vtclean program
 
 2.0	Tpty manual
 2.1	Tptyreplay manual
@@ -62,7 +63,11 @@ Table of Contents:
 4.5	Which systems does tpty support?
 4.6	What's the same and difference between tpty, script(1) and expect(1)?
 
-______________________________________________________________________________________________
+5.0	README (Chinese)
+5.1	為什麼我要寫tpty？
+5.2	接下來做什麼？
+
+______________________________________________________________________________
 
 
 1.0	Install the tpty* program
@@ -99,420 +104,446 @@ ______________________________________________________________________________
 
 2.0	Tpty manual
 
-tpty(1) 			 tpty man page			       tpty(1)
+     tpty(1)		    1.1	(30 March 2017)		       tpty(1)
 
 
 
-NAME
-       tpty  −	tpty execute the program in a terminal session of its own, use
-       to control the stream through the pseudo terminal.
+     NAME
+	  tpty - tpty execute the program in a terminal	session	of its
+	  own, use to control the stream through the pseudo terminal.
 
-SYNOPSIS
-       tpty [ ‐x ‐c config ] [ ‐T timeout ‐d driver ] [ ‐einuvXI ‐o outfile ‐t
-       timingfile  ‐a  auditfile  ‐p  RSAPrivateKey ‐k EncrypedKey ] program [
-       args ... ]
+     SYNOPSIS
+	  tpty [ -x -c config ]	[ -T timeout -d	driver ] [ -einuvXI -o
+	  outfile -t timingfile	-a auditfile -p	RSAPrivateKey -k
+	  EncrypedKey ]	program	[ args ... ]
 
-DESCRIPTION
-       tpty based on Mr. Stevens’s pty program, and its first function	is  to
-       add  a  pseudo‐terminal	between  the input and ouput of the program to
-       unbuffer the standard I/O. For example, suppose you  are  watching  the
-       output of
-	Background‐Running  Job,  you  can disable this automatic buffering as
-       follows:
+     DESCRIPTION
+	  tpty based on	Mr. Stevens's pty program, and its first
+	  function is to add a pseudo-terminal between the input and
+	  ouput	of the program to unbuffer the standard	I/O. For
+	  example, suppose you are watching the	output of
+	   Background-Running Job, you can disable this	automatic
+	  buffering as follows:
 
-	       tpty ‐i program </dev/null >file.out &
+		  tpty -i program </dev/null >file.out &
 
-       Using the tpty, we can implement the script(1) program as the following
-       shell script:
+	  Using	the tpty, we can implement the script(1) program as
+	  the following	shell script:
 
-	       tpty "${SHELL:‐/usr/bin/ksh}" | tee typescript
+		  tpty "${SHELL:-/usr/bin/ksh}"	| tee typescript
 
-       or
+	  or
 
-	       tpty ‐o typescript "${SHELL:‐/usr/bin/ksh}"
+		  tpty -o typescript "${SHELL:-/usr/bin/ksh}"
 
-       Using  the  tpty, we can "talk" to the interactive programs noninterac‐
-       tively like the expect(1).  The option (−d) allows tpty to be connected
-       to  a  driver  process for its input and output. The standard output of
-       the driver is tpty’s standard input and vice versa.
+	  Using	the tpty, we can "talk"	to the interactive programs
+	  noninteractively like	the expect(1).	The option (-d)	allows
+	  tpty to be connected to a driver process for its input and
+	  output. The standard output of the driver is tpty's standard
+	  input	and vice versa.
 
-							 coprocess
-	     +‐‐‐‐‐‐‐‐‐+   pipe1    +‐‐‐‐‐‐‐‐‐‐+	 +‐‐‐‐‐‐‐‐‐‐‐+
-	     | driving |‐‐‐‐‐‐‐‐‐‐‐>| pseudo   |‐‐‐‐‐‐‐‐‐|stdin      |
-	     | program |<‐‐‐‐‐‐‐‐‐‐‐| terminal |<‐‐‐‐‐‐‐‐|stdout     |
-	     +‐‐‐‐‐‐‐‐‐+   pipe2    +‐‐‐‐‐‐‐‐‐‐+	 +‐‐‐‐‐‐‐‐‐‐‐+
-		|  ^
-		|  |
-	      /dev/tty
-		|  |
-		v  |
-	     +‐‐‐‐‐‐‐‐+
-	    | Interact |
-	    | Terminal |
-	     +‐‐‐‐‐‐‐‐+
+							    coprocess
+		+---------+   pipe1    +----------+	    +-----------+
+		| driving |----------->| pseudo	  |---------|stdin	|
+		| program |<-----------| terminal |<--------|stdout	|
+		+---------+   pipe2    +----------+	    +-----------+
+		   |  ^
+		   |  |
+		 /dev/tty
+		   |  |
+		   v  |
+		,-----------.
+	       | Interactive |
+	       | Terminal    |
+		`-----------'
 
-       You can write the driver program yourself like this:
+	  You can write	the driver program yourself like this:
 
-	    % cat driver.sh
+	       % cat driver.sh
 
-	    while read line
-	    do
-		if [[ "$line" = *"’s New password:" ]] || \
-		   [[ "$line" = "Enter the new password again:" ]]
-	       then
-		   echo "secret"
-	       fi
-	    done
+	       while read line
+	       do
+		   if [[ "$line" = *"'s	New password:" ]] || \
+		      [[ "$line" = "Enter the new password again:" ]]
+		  then
+		      echo "secret"
+		  fi
+	       done
 
-       Then you can run the following command to change  password  noninterac‐
-       tively:
+	  Then you can run the following command to change password
+	  noninteractively:
 
-	    % tpty ‐n ‐e ‐d driver.sh passwd foo
+	       % tpty -n -e -d driver.sh passwd	foo
 
-       tpty  also  provides the option (−x) for default driver, if use default
-       driver, you must specify the config file (−c). The config file’s format
-       like:
+	  tpty also provides the option	(-x) for default driver, if
+	  use default driver, you must specify the config file (-c).
+	  The config file's format like:
 
-	   ExpectString % SendReply % <TptyReserveWords>
+	      ExpectString % SendReply % <TptyReserveWords>
 
-       Here is an example using the config file:
+	  Here is an example using the config file:
 
-	    login: % foo
-	    foo’s Password: % password
-	    foo@host:[/home/foo]# % date "+%y%m%d"
-	    foo@host:[/home/foo]# % exit
+	       login: %	foo
+	       foo's Password: % password
+	       foo@host:[/home/foo]# % date "+%y%m%d"
+	       foo@host:[/home/foo]# % exit
 
-       The field separator is ’%’. Note:
+	  The field separator is '%'. Note:
 
-       1) If  your  shell prompt (PS1) or expect string is ’%’, please be sure
-	  to leave a space before the first delimiter, like this:
+	  1) If	your shell prompt (PS1)	or expect string is '%',
+	     please be sure to leave a space before the	first
+	     delimiter,	like this:
 
-	       % % whoami
+		  % % whoami
 
-	  Don’t like this
+	     Don't like	this
 
-	       %% whoami
+		  %% whoami
 
 
-       2) If your command include "%", it’s no problem:
+	  2) If	your command include "%", it's no problem:
 
-	       foo@host:[/home/foo]# % date "+%D"
+		  foo@host:[/home/foo]#	% date "+%D"
 
 
-       tpty looks for the ExpectString in the  interactive  program’s  output,
-       inputs the SendReply if the pattern matched. That means:
+	  tpty looks for the ExpectString in the interactive program's
+	  output, inputs the SendReply if the pattern matched. That
+	  means:
 
-	    case Output matched:
-		 ExpectString1)
-		      puts SendReply1; break;
-		 ExpectString2)
-		      puts SendReply2; break;
-		 ...
+	       case Output matched:
+		    ExpectString1)
+			 puts SendReply1; break;
+		    ExpectString2)
+			 puts SendReply2; break;
+		    ...
 
-       The  config  file  can use the regular expression, since if the Expect‐
-       String has symbol ’%’, you can use ’.’ to replace it to avoid confusing
-       the  characters	and  delimiters.   The symbols and subroutines is from
-       regex(3). You must precede them with a \ (backslash)  if  you  want  to
-       match the special symbol itself. For example, \$ matches a dollar sign.
+	  The config file can use the regular expression, since	if the
+	  ExpectString has symbol '%', you can use '.' to replace it
+	  to avoid confusing the characters and	delimiters.  The
+	  symbols and subroutines is from regex(3). You	must precede
+	  them with a \	(backslash) if you want	to match the special
+	  symbol itself. For example, \$ matches a dollar sign.
 
-	   login: %foo
-	   foo’s Password: %password
-	   foo@host:[/]# % shell‐cmd
-	   .*\[.*\].*% shell‐cmd
-	   foo@host:[/]# % exit
+	      login: %foo
+	      foo's Password: %password
+	      foo@host:[/]# % shell-cmd
+	      .*\[.*\].*% shell-cmd
+	      foo@host:[/]# % exit
 
-       Note, the pattern match do not ignore the BLANK
+	  Note,	the pattern match do not ignore	the BLANK
 
-       The TptyReserveWords is NONR, REPEAT, INTERACT, ENCRYPT:
+	  The TptyReserveWords is NOCR,	REPEAT,	INTERACT, ENCRYPT:
 
-       NONR   means do not input the newline character (’\r’).
+	  NOCR means do	not input the newline character	('\r').
 
-       REPAET
-		  while (Output matched ExpectString)
-		      SendReply;
+	  REPAET
+		   while (Output matched ExpectString)
+		       SendReply;
 
-       INTERACT (must use with −I option)
+	  INTERACT (must use with -I option)
 
-		  if (Output matched ExpectString)
-			  do the rest thing manually;
+		   if (Output matched ExpectString)
+			   do the rest thing manually;
 
-       ENCRYPT
-	      is added by tpty‐crypt(1) automatically, no need add the keyword
-	      manually.   The  tpty‐crypt(1)  and  tpty‐keygen(1)  are used to
-	      encrypt the sensitive fields of the config file.	You should use
-	      tpty‐keygen(1) to generate an RSA keypair with PEM format:
+	  ENCRYPT
+	       is added	by tpty-crypt(1) automatically,	no need	add
+	       the keyword manually.  The tpty-crypt(1)	and tpty-
+	       keygen(1) are used to encrypt the sensitive fields of
+	       the config file.	 You should use	tpty-keygen(1) to
+	       generate	an RSA keypair with PEM	format:
 
-		  $ tpty‐keygen ./private.pem
-		  Generating RSA private key, 2048 bit long modulus
-		  ...+++
-		  private key : ./private.pem
-		  public  key : ./private.pem.pub
+		   $ tpty-keygen ./private.pem
+		   Generating RSA private key, 2048 bit	long modulus
+		   ...+++
+		   private key : ./private.pem
+		   public  key : ./private.pem.pub
 
-	      Then  you can encode the config file with tpty‐crypt(1) The syn‐
-	      tax is
+	       Then you	can encode the config file with	tpty-crypt(1)
+	       The syntax is
 
-		  tpty‐crypt <FileName> <SegmentName> <PublicKey> <StoreFile>
+		   tpty-crypt <FileName> <SegmentName> <PublicKey> <StoreFile>
 
-	      The FileName is the configuration file (‐c  <file>).   The  Seg‐
-	      mentName	is  which  segment you want to encode, like "password"
-	      etc.  The StoreFile is the file which  is  used  to  stored  the
-	      encrypted segment.  For example, The original file is
+	       The FileName is the configuration file (-c <file>).
+	       The SegmentName is which	segment	you want to encode,
+	       like "password" etc.  The StoreFile is the file which
+	       is used to stored the encrypted segment.	 For example,
+	       The original file is
 
-		  assword: % secret
-		  .*# % whoami
-		  .*# % exit
+		   assword: % secret
+		   .*# % whoami
+		   .*# % exit
 
-	      After executed the following command:
+	       After executed the following command:
 
-		  $ tpty‐crypt config "assword:" private.pem.pub config.key
+		   $ tpty-crypt	config "assword:" private.pem.pub config.key
 
-	      The config file will become:
+	       The config file will become:
 
-		  assword: %<ENCRYPT>
-		  .# % whoami
-		  .# % exit
+		   assword: %<ENCRYPT>
+		   .# %	whoami
+		   .# %	exit
 
-	      The  encrypted  key  is stored in config.key.  After the file is
-	      encrypted, execute:
+	       The encrypted key is stored in config.key.  After the
+	       file is encrypted, execute:
 
-		  $ tpty ‐x ‐c config ‐p private.pem ‐k config.key \
-		      telnet remote‐host
+		   $ tpty -x -c	config -p private.pem -k config.key \
+		       telnet remote-host
 
 
-       Here is another sample of config file:
+	  Here is another sample of config file:
 
-	   ogin: %foo
-	   assword: %secret
-	   .*# % cat LargeFile | more
-	   ‐‐More‐‐% f % <NONR> % <REPEAT>
-	   .*# % <INTERACT>
+	      ogin: %foo
+	      assword: %secret
+	      .*# % cat	LargeFile | more
+	      --More--%	f % <NOCR> % <REPEAT>
+	      .*# % <INTERACT>
 
-       It means enter the name ’foo’ when the login prompt appears, enter  the
-       password ’secret’ when the password prompt appears, displays the Large‐
-       File contents with more(1), moves the pages until the end of the  file,
-       then do the rest thing manually.
+	  It means enter the name 'foo'	when the login prompt appears,
+	  enter	the password 'secret' when the password	prompt
+	  appears, displays the	LargeFile contents with	more(1), moves
+	  the pages until the end of the file, then do the rest	thing
+	  manually.
 
 
 
-OPTIONS
-       Valid options are:
+     OPTIONS
+	  Valid	options	are:
 
-       −a auditfile
-	      File containing all input from stdin, and the time when the com‐
-	      mand were executed. You can run the command:
+	  -a auditfile
+	       File containing all input from stdin, and the time when
+	       the command were	executed. You can run the command:
 
-		  $ col ‐b <auditfile >auditfile.fix 2>&1
+		   $ col -b <auditfile >auditfile.fix 2>&1
 
-	      to cleanup the backspace, or run the vtclean(1) to  cleanup  all
-	      control characters.
+	       to cleanup the backspace, or run	the vtclean(1) to
+	       cleanup all control characters.
 
-       −d driver
-	      Specifies the driver program for stdin/stdout.
+	  -d driver
+	       Specifies the driver program for	stdin/stdout.
 
-       −e     Does not echo characters for slave pty’s line discipline.
+	  -e   Does not	echo characters	for slave pty's	line
+	       discipline.
 
-       −c config
-	      Specifies  the  config file with default driver, must use −c and
-	      −x
-	       flags together.
+	  -c config
+	       Specifies the config file with default driver, must use
+	       -c and -x
+		flags together.
 
-       −i     Ignore EOF on standard input.
+	  -i   Ignore EOF on standard input.
 
-       −k EncryptedKey
-	      Specifies the file which save the encrypted segment of the  con‐
-	      fig file. Only support the PEM key format with 2048 bits now.
+	  -k EncryptedKey
+	       Specifies the file which	save the encrypted segment of
+	       the config file.	Only support the PEM key format	with
+	       2048 bits now.
 
-       −n     No  interactive  mode,  will  not  initial  the  window size and
-	      termios.
+	  -n   No interactive mode, will not initial the window	size
+	       and termios.
 
-       −o outfile
-	      Designates the file to be used for record  the  program’s  input
-	      and output.
+	  -o outfile
+	       Designates the file to be used for record the program's
+	       input and output.
 
-       −p RSAPrivateKey
-	      Specifies the RSA private key to decrypt the config file.
+	  -p RSAPrivateKey
+	       Specifies the RSA private key to	decrypt	the config
+	       file.
 
-       −t TimingFile
-	      Output  timing  data  to	TimingFile.   This  data  contains two
-	      fields, separated by a space.  The  first  field	indicates  how
-	      much  time  elapsed since the previous output.  The second field
-	      indicates how many  characters  were  output  this  time.   This
-	      information  can	be  used to replay outfile (‐o) with realistic
-	      typing and output delays.
+	  -t TimingFile
+	       Output timing data to TimingFile.  This data contains
+	       two fields, separated by	a space.  The first field
+	       indicates how much time elapsed since the previous
+	       output.	The second field indicates how many characters
+	       were output this	time.  This information	can be used to
+	       replay outfile (-o) with	realistic typing and output
+	       delays.
 
-       −T timeout
-	      If after timeout, none of interactive program’s output have been
-	      seen,  tpty  will  exit. If you don’t specify the ‐x option, the
-	      timeout will be ignored. Default timeout is 10 seconds. If time‐
-	      out < 0, will wait forever.
+	  -T timeout
+	       If after	timeout, none of interactive program's output
+	       have been seen, tpty
 
-       −u     Unlink the encrypted key file (specified by −k option).
+	       will exit. If you don't specify the -x option, the
+	       timeout will be ignored.	Default	timeout	is 10 seconds.
+	       If timeout < 0, will wait forever.
 
-       −v     Verbose  mode. It only displays the slave pty’s device name, not
-	      is very helpfu l for debugging.
+	  -u   Unlink the encrypted key	file (specified	by -k option).
 
-       −x     Choose default driver. Must use −c and  −x  flags  together,  it
-	      will  interpret  the  config file, drive interactive programs in
-	      noninteractive modes.
+	  -v   Verbose mode. It	only displays the slave	pty's device
+	       name, not is very helpfu	l for debugging.
 
-       −X     Redirect terminal output to /dev/null if use the default driver.
-	      But  still can use −o to dump the output. This option and the −I
-	      option are mutually exclusive.
+	  -x   Choose default driver. Must use -c and -x flags
+	       together, it will interpret the config file, drive
+	       interactive programs in noninteractive modes.
 
-       −I     If you don’t want to completely automate a task  with  a	driver
-	      (−d  or −x), the −I option is to automate some of it and then do
-	      the rest manually.  For example, if the  config’s  (−c)  content
-	      is:
+	  -X   Redirect	terminal output	to /dev/null if	use the
+	       default driver. But still can use -o to dump the
+	       output. This option and the -I option are mutually
+	       exclusive.
 
-		      assword: %TopSecret
-		      .*# % <INTERACT>
+	  -I   If you don't want to completely automate	a task with a
+	       driver (-d or -x), the -I option	is to automate some of
+	       it and then do the rest manually.  For example, if the
+	       config's	(-c) content is:
 
-	      When execute:
+		       assword:	%TopSecret
+		       .*# % <INTERACT>
 
-		   tpty ‐I ‐x ‐c config ssh remote‐host
+	       When execute:
 
-	      It  means after login the shell automatically, do the rest thing
-	      manually. This option and −X option are mutually exclusive.
+		    tpty -I -x -c config ssh remote-host
 
+	       It means	after login the	shell automatically, do	the
+	       rest thing manually. This option	and -X option are
+	       mutually	exclusive.
 
-NOTES
-       Certain interactive commands, such as vi(1), create garbage in the out‐
-       file  (‐o).   tpty  works best with commands that do not manipulate the
-       screen, the results are meant to emulate a hardcopy terminal.
 
+     NOTES
+	  Certain interactive commands,	such as	vi(1), create garbage
+	  in the outfile (-o).	tpty works best	with commands that do
+	  not manipulate the screen, the results are meant to emulate
+	  a hardcopy terminal.
 
-Exit Status
-       This command returns the following exit values:
 
-       0      Successful completion.
+     Exit Status
+	  This command returns the following exit values:
 
-       >0     An error occurred.
+	  0    Successful completion.
 
+	  >0   An error	occurred.
 
-BUGS
-       If tpty with ‐o option, it will place everything in  the  output  file,
-       including  linefeeds  and  backspaces.  This is not what the naive user
-       expects. But, you can use some tools to eliminate the  garbage  charac‐
-       ters,  e.g.   vtclean(1)  using	a  state machine to cleanup the escape
-       sequences based on the design publied by Paul Williams. You can try the
-       command:
 
-	   col ‐b <record 2>/dev/null | vtclean >record.clean
+     BUGS
+	  If tpty with -o option, it will place	everything in the
+	  output file, including linefeeds and backspaces.  This is
+	  not what the naive user expects. But,	you can	use some tools
+	  to eliminate the garbage characters, e.g.  vtclean(1)	using
+	  a state machine to cleanup the escape	sequences based	on the
+	  design publied by Paul Williams. You can try the command:
 
+	      col -b <record 2>/dev/null | vtclean >record.clean
 
-HISTORY
-       tpty  The  prototype  of  tpty  was  pty  program written by W. Richard
-       Stevens for APUE.  Cun Gong implemented the default driver for interac‐
-       tive  programs  with  other  features,  was  inspired  by expect(1) and
-       GNU/Linux script(1) utility.  The tpty worked on FreeBSD, Solaris, AIX,
-       GNU/Linux and Mac OS X.
 
-SEE ALSO
-       expect(1), script(1), tptyreplay(1), tty(1), pty(5), regex(3)
+     HISTORY
+	  tpty The prototype of	tpty was pty program written by	W.
+	  Richard Stevens for APUE.  Cun Gong implemented the default
+	  driver for interactive programs with other features, was
+	  inspired by expect(1)	and GNU/Linux script(1)	utility.  The
+	  tpty worked on FreeBSD, Solaris, AIX,	GNU/Linux and Mac OS
+	  X.
 
-PROBLEMS
-       Problems with tpty should be reported to <gong_cun@bocmacau.com>
+     SEE ALSO
+	  expect(1), script(1),	tptyreplay(1), tty(1), pty(5),
+	  regex(3)
 
+     PROBLEMS
+	  Problems with	tpty should be reported	to
+	  <gong_cun@bocmacau.com>
 
-=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~==~=~=~=~=~=~=~=~=~=
+=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+
 2.1	Tptyreplay manual
 
-TPTYREPLAY(1)		      tptyreplay man page		 TPTYREPLAY(1)
+
+     TPTYREPLAY(1)	     1.1 (30 Mar 2017)		 TPTYREPLAY(1)
 
 
 
-NAME
-       tptyreplay − play back typetpty (typescript), using timing information
+     NAME
+	  tptyreplay - play back typetpty (typescript),	using timing
+	  information
 
-SYNOPSIS
-       tptyreplay [options] −t timingfile −s typetpty
+     SYNOPSIS
+	  tptyreplay [options] -t timingfile -s	typetpty
 
-DESCRIPTION
-       This  program  replays  a  typetpty, using timing information to ensure
-       that output happens in the same rhythm as it originally	appeared  when
-       the  tpty(1)  or  GNU/script(1) was recorded.  tptyreplay also provides
-       some subcommands for controling the player.
+     DESCRIPTION
+	  This program replays a typetpty, using timing	information to
+	  ensure that output happens in	the same rhythm	as it
+	  originally appeared when the tpty(1) or GNU/script(1)	was
+	  recorded.  tptyreplay	also provides some subcommands for
+	  controling the player.
 
-       tptyreplay is only guaranteed to work properly if run on the same  type
-       of  terminal the typetpty was recorded on.  Otherwise, any escape char‐
-       acters in the typetpty may be interpreted differently by  the  terminal
-       to which tptyreplay is sending its output.
+	  tptyreplay is	only guaranteed	to work	properly if run	on the
+	  same type of terminal	the typetpty was recorded on.
+	  Otherwise, any escape	characters in the typetpty may be
+	  interpreted differently by the terminal to which tptyreplay
+	  is sending its output.
 
-       The timingfile which specified by −t is what tpty(1) outputs to record‐
-       file if it is run with the −t parameter.
+	  The timingfile which specified by -t is what tpty(1) outputs
+	  to recordfile	if it is run with the -t parameter.
 
-       The typetpty which specified by −s is what tpty(1) outputs  to  outfile
-       if it is run with the −o parameter.
+	  The typetpty which specified by -s is	what tpty(1) outputs
+	  to outfile if	it is run with the -o parameter.
 
-       If the −d divisor parameter is specified, it is used as a speed‐up mul‐
-       tiplier.  For example, a speed‐up of 2 makes  tptyreplay  go  twice  as
-       fast, and a speed‐up of 0.1 makes it go ten times slower than the orig‐
-       inal session.
+	  If the -d divisor parameter is specified, it is used as a
+	  speed-up multiplier.	For example, a speed-up	of 2 makes
+	  tptyreplay go	twice as fast, and a speed-up of 0.1 makes it
+	  go ten times slower than the original	session.
 
-OPTIONS
-       Valid options are:
+     OPTIONS
+	  Valid	options	are:
 
-       −t     file File containing tpty’s timing output.
+	  -t   file File containing tpty's timing output.
 
-       −s     file File containing tpty’s terminal output.
+	  -s   file File containing tpty's terminal output.
 
-       −d     number Speed up the replay displaying this number of times.  The
-	      argument	is  a  floating  point	number.   It’s	called divisor
-	      because it divides the timings by this factor.
+	  -d   number Speed up the replay displaying this number of
+	       times.  The argument is a floating point	number.	 It's
+	       called divisor because it divides the timings by	this
+	       factor.
 
-       −m     number Set the maximum delay between transcript updates to  num‐
-	      ber  of seconds.	The argument is a floating point number.  This
-	      can be used to avoid long pauses in the transcript replay.
+	  -m   number Set the maximum delay between transcript updates
+	       to number of seconds.  The argument is a	floating point
+	       number.	This can be used to avoid long pauses in the
+	       transcript replay.
 
-       Subcommands
-	      Valid interactive subcommands are:
+	  Subcommands
+	       Valid interactive subcommands are:
 
+	  SPACE
+	       Pause/Play.
 
+	  u    Make two	times faster than the current speed.
 
-       SPACE  Pause/Play.
+	  d    Make two	times slower than the current speed.
 
-       u      Make two times faster than the current speed.
+	  b    Playback	one record of the timing file.
 
-       d      Make two times slower than the current speed.
+	  f    Fast-forward one	record of the timing file.
 
-       b      Playback one record of the timing file.
+	  Any other key
+	       Resume to the original speed.
 
-       f      Fast‐forward one record of the timing file.
-
-       Any other key
-	      Resume to the original speed.
-
-       ^C     End display.
-
-
-NOTES
-       The subcommand ’b’ and ’f’ are weakly supported.  Before playback,  you
-       must pause (subcommand ’SPACE’) the replay first.
-
-
-EXAMPLE
-       Record and replay:
-
-	   % tpty ‐o tpty.out ‐r tpty.tm "${SHELL:‐/usr/bin/ksh}"
-	   % ls
-	   <etc, etc>
-	   % exit
-	   <exit>
-	   % tptyreplay ‐t tpty.tm ‐s tpty.out
-
-       If the tpty session is still active,
-       you can monitor the user’s action by running:
-
-	   % tptyreplay ‐t tpty.tm ‐s tpty.out ‐m0
+	  ^C   End display.
 
 
-SEE ALSO
-       tpty(1)script(1)scriptreplay(1)
+     NOTES
+	  The subcommand 'b' and 'f' are weakly	supported.  Before
+	  playback, you	must pause (subcommand 'SPACE')	the replay
+	  first.
 
-AUTHOR
-       The  tptyreplay	was based on GNU/Linux scriptreplay program.  The pro‐
-       gram was re‐written by Cun Gong (gong_cun@bocmacau.com) to work on both
-       FreeBSD, Solaris, AIX, Mac OS X and GNU/Linux.
+
+     EXAMPLE
+	  Record and replay:
+
+	      %	tpty -o	tpty.out -r tpty.tm "${SHELL:-/usr/bin/ksh}"
+	      %	ls
+	      <etc, etc>
+	      %	exit
+	      <exit>
+	      %	tptyreplay -t tpty.tm -s tpty.out
+
+	  If the tpty session is still active,
+	  you can monitor the user's action by running:
+
+	      %	tptyreplay -t tpty.tm -s tpty.out -m0
+
+
+     SEE ALSO
+	  tpty(1)script(1)scriptreplay(1)
+
+     AUTHOR
+	  The tptyreplay was based on GNU/Linux	scriptreplay program.
+	  The program was re-written by	Cun Gong
+	  (gong_cun@bocmacau.com) to work on both FreeBSD, Solaris,
+	  AIX, Mac OS X	and GNU/Linux.
 
 ______________________________________________________________________________
 
@@ -659,7 +690,7 @@ ______________________________________________________________________________
 4.6	What's the same and difference between tpty, script(1) and expect(1)?
 
 	tpty based on W. Richard Stevens' pty program, realized the basic
-	funtion of expect: drive interactive programs in noninteractive modes.
+	function of expect: drive interactive programs in noninteractive modes.
 	But expect(1) as an extension of the Tcl language, provides the
 	ability to be programmable on pseudo terminal. tpty using a config
 	file to driver the interactive programs, also provides a programmable
@@ -668,3 +699,51 @@ ______________________________________________________________________________
 	can record the terminal input and output, but can't drive interactive
 	programs. The tptyreplay can play the typescript as the GNU
 	scriptreplay(1), but provice more play control functions.
+
+______________________________________________________________________________
+
+5.0	README (Chinese)
+
+5.1	為什麼我要寫tpty？
+	
+	tpty是兩年多前我學習<<UNIX環境高級編程>> (APUE, 2nd Edition）將近尾聲
+	時，作為練習寫的程序，基於Stevens先生在第19章中的pty程序。這個程序很
+	精妙，使用了pty_fork()和socketpair()就將一個協作進程和偽終端連接在了
+	一起，但美中不足的是程序并沒有具體闡明一個驅動程序究竟是什麼樣的，同時
+	由於UNIX的平台眾多，偽終端的驅動方法又不盡相同，因此當時就想自己編程
+	實現一遍以一探究竟。過程是很曲折的，由於自己的編程水平並不高明，對UNIX
+	系統的終端I/O及進程間關係的理解又不是很透徹，因此著實花了點時間，在這
+	期間還讀了部分expect(1)的源代碼。不過最終實現了以非交互方式驅動交互
+	程序的自動運行時，還是覺得非常興奮。這期間我逐漸理解了，其實一些簡單的
+	模型，就可以構造出非常不可思議的功能，比如expect(1)是利用Tcl擴展在偽
+	終端的輸入輸出流上架設了一層可編程功能，主要是針對正則表達式的控制
+	結構。而鼎鼎大名的tmux(1)或是screen(1)，其實也是在偽終端和用戶交互之間
+	架設了一個協作進程，并通過一些window或pane來展現。在tpty程序中，協作
+	進程和偽終端的交互是通過不具名的雙向管道來實現的，而tmux作為一個客戶端
+	-服務器模型，是通過具名的雙向管道(Unix Domain Socket)來實現的，而古老
+	的expect中也有這樣的雛形，是通過兩個具名的單向管道(FIFO)來實現的。
+	所以，重造輪子的好處是讓你看到了一類程序的本質，雖然人們在層層抽象之中
+	實現了種種繁複的功能，但是其本質很可能是很簡單的，而且從來都沒有變化過。
+	
+	在完成tpty程序不久，公司準備引進UCM用戶管控系統，其中UCM吸引人的亮點
+	之一在於它可以自動的更改密碼，而我恰好負責POC，所以我早就知道自動更改
+	密碼其實就是通過在交互程序上架設一層偽終端來實現，而且頗知其原理，所以
+	POC時我也悉心觀察了一下UCM的行為：也是使用Java的Expect包來實現自動交互。
+	不過UCM具有記錄屏幕的功能，所以我很快就實現了tptyreplay，也可以在終端
+	模式下記錄并回放操作，我記得當時還使用了curse庫實現了一個簡易的UCM系統
+	演示給Michael和Raymond看：用tpty來自動更改及輸入密碼并記錄操作，并使用
+	tptyreplay回放操作過程。但遺憾的是，tpty和tptyreplay程序始終作為一個
+	玩具程序沒有被推廣。不過tpty還是發揮了一點作用：我將所有中間件的安裝與
+	配置過程都用tpty錄了像，後來培訓TechNet同事時發揮了點作用；在DR操作的
+	過程中，操作員的所有操作也是用tpty錄像的，對於審計、文檔和培訓都起了
+	作用。
+	
+	最後，藉此機會向偉大的W. Richard Stevens先生致敬，是他的書將我引向了
+	UNIX的精彩世界，成為更好的系統管理員和程序員。為了向APUE致敬，我測試了
+	其中論及的所有平台，包括Solaris, AIX, Mac OS X, FreeBSD以及GNU/Linux。
+	
+5.2	接下來做什麼？
+
+	tpty不會再增加新的功能，但是如果你在使用中遇到了任何問題，請郵件告訴我：
+	<gong_cun@bocmacau.com>
+	
